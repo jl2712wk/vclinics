@@ -1,0 +1,4 @@
+[[redirects]]
+  from = "/px_summary.html/*"
+  to = "/px_summary.html"
+  status = 200

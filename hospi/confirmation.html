@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestión de Doctores - Por Confirmar</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --secondary-color: #3b82f6;
+            --accent-color: #1e40af;
+            --light-color: #f8fafc;
+            --dark-color: #1e293b;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: #f1f5f9;
+            color: var(--dark-color);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .doctors-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .doctor-card {
+            background-color: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .doctor-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        .doctor-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .doctor-info {
+            padding: 20px;
+        }
+
+        .doctor-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--dark-color);
+        }
+
+        .doctor-specialty {
+            color: var(--secondary-color);
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+
+        .doctor-license {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
+            text-align: center;
+        }
+
+        .btn:hover {
+            background-color: var(--accent-color);
+        }
+
+        .btn-recipe {
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            overflow: auto;
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 2% auto;
+            width: 90%;
+            max-width: 900px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .modal-header {
+            padding: 20px;
+            background-color: var(--primary-color);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-body {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .image-container {
+            position: relative;
+            border: 1px solid #e2e8f0;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            background-color: #f8fafc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            min-height: 300px;
+        }
+
+        .doctor-modal-image {
+            max-height: 500px;
+            max-width: 100%;
+            height: auto;
+            width: auto;
+            object-fit: contain;
+            user-select: none;
+            pointer-events: none;
+        }
+
+        .canvas-overlay {
+            position: absolute;
+            pointer-events: auto;
+            z-index: 10;
+            cursor: crosshair;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .point-marker {
+            position: absolute;
+            background-color: red;
+            border: 2px solid white;
+            border-radius: 50%;
+            width: 8px;
+            height: 8px;
+            transform: translate(-50%, -50%);
+            z-index: 20;
+            cursor: move;
+        }
+
+        .letter-label {
+            position: absolute;
+            font-weight: bold;
+            color: black;
+            background: white;
+            border: 1px solid #ccc;
+            padding: 2px 6px;
+            border-radius: 4px;
+            transform: translate(-50%, -50%);
+            z-index: 21;
+            cursor: move;
+            pointer-events: auto;
+            user-select: none;
+        }
+
+        .coordinates-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-group label {
+            font-weight: 500;
+            color: var(--dark-color);
+        }
+
+        .form-group input {
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+        }
+
+        .coordinates-list {
+            border: 1px solid #e2e8f0;
+            border-radius: var(--border-radius);
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .coordinate-item {
+            padding: 10px 15px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .coordinate-item:last-child {
+            border-bottom: none;
+        }
+
+        .coordinate-info {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .coordinate-name {
+            font-weight: 500;
+        }
+
+        .coordinate-values {
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+
+        .coordinate-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-small {
+            padding: 5px 10px;
+            font-size: 0.8rem;
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+        }
+
+        .btn-danger:hover {
+            background-color: #dc2626;
+        }
+
+        .btn-success {
+            background-color: var(--success-color);
+        }
+
+        .btn-success:hover {
+            background-color: #059669;
+        }
+
+        .add-coordinate-btn {
+            align-self: flex-start;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: var(--secondary-color);
+        }
+
+        .error {
+            text-align: center;
+            padding: 20px;
+            color: var(--danger-color);
+            background-color: #fef2f2;
+            border-radius: var(--border-radius);
+            margin: 20px 0;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #64748b;
+        }
+
+        @media (max-width: 768px) {
+            .doctors-grid {
+                grid-template-columns: 1fr;
+            }
+            .modal-content {
+                width: 95%;
+                margin: 5% auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Doctores por Confirmar</h1>
+            <p>Doctores pendientes de verificación y configuración de coordenadas</p>
+        </header>
+
+        <div id="doctors-container" class="doctors-grid">
+            <!-- Las tarjetas de doctores se cargarán aquí -->
+        </div>
+
+        <div id="loading" class="loading">
+            <p>Cargando doctores por confirmar...</p>
+        </div>
+
+        <div id="error" class="error" style="display: none;">
+            <p>Error al cargar los datos. Por favor, intente más tarde.</p>
+        </div>
+    </div>
+
+    <div id="coordinates-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Agregar Puntos de Coordenadas</h2>
+                <button class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="image-container">
+                    <img id="doctor-modal-image" class="doctor-modal-image" src="" alt="Imagen del doctor">
+                    <div id="canvas-overlay" class="canvas-overlay"></div>
+                </div>
+                
+                <div class="coordinates-form">
+                    <div class="form-group">
+                        <label for="point-letter">Letra a mostrar:</label>
+                        <input type="text" id="point-letter" placeholder="Ej: A, 1, X, Dr." value="A">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="point-size">Tamaño de letra (px):</label>
+                        <input type="number" id="point-size" min="10" max="100" value="24">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Coordenadas del punto:</label>
+                        <div id="coordinates-display">x: 0, y: 0</div>
+                    </div>
+                    
+                    <button id="add-point-btn" class="btn btn-success add-coordinate-btn">Agregar Punto</button>
+                    
+                    <div class="coordinates-list" id="coordinates-list">
+                        <!-- Los puntos agregados se mostrarán aquí -->
+                    </div>
+                    
+                    <div class="flex justify-end mt-4">
+                        <button id="save-coordinates-btn" class="btn btn-success">Guardar Puntos</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const supabaseUrl = 'https://hlhopwhvntevmqmndthv.supabase.co';
+            const supabaseServiceRoleKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhsaG9wd2h2bnRldm1xbW5kdGh2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1ODUwNTYzNCwiZXhwIjoyMDc0MDgxNjM0fQ.pln-wfzel4nnUdJkAh-TAL_TprcgKfB9RZqxE-TrA94';
+            const supabase = window.supabase.createClient(supabaseUrl, supabaseServiceRoleKey);
+            
+            let currentDoctor = null;
+            let points = [];
+            let currentPoint = null;
+            
+            const doctorsContainer = document.getElementById('doctors-container');
+            const loadingElement = document.getElementById('loading');
+            const errorElement = document.getElementById('error');
+            const modal = document.getElementById('coordinates-modal');
+            const modalImage = document.getElementById('doctor-modal-image');
+            const closeBtn = document.querySelector('.close-btn');
+            const pointLetterInput = document.getElementById('point-letter');
+            const pointSizeInput = document.getElementById('point-size');
+            const coordinatesDisplay = document.getElementById('coordinates-display');
+            const addPointBtn = document.getElementById('add-point-btn');
+            const coordinatesList = document.getElementById('coordinates-list');
+            const saveCoordinatesBtn = document.getElementById('save-coordinates-btn');
+            const canvasOverlay = document.getElementById('canvas-overlay');
+            
+            loadDoctors();
+            
+            closeBtn.addEventListener('click', closeModal);
+            window.addEventListener('click', (e) => {
+                if (e.target === modal) closeModal();
+            });
+            
+            async function loadDoctors() {
+                try {
+                    const { data, error } = await supabase
+                        .from('doctors')
+                        .select('*')
+                        .eq('confirmado', 'no');
+                    
+                    if (error) throw error;
+                    
+                    loadingElement.style.display = 'none';
+                    
+                    if (data && data.length > 0) {
+                        displayDoctors(data);
+                    } else {
+                        doctorsContainer.innerHTML = `
+                            <div class="empty-state">
+                                <h3>No hay doctores pendientes de confirmación</h3>
+                                <p>Todos los doctores han sido verificados o no hay registros pendientes.</p>
+                            </div>
+                        `;
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    loadingElement.style.display = 'none';
+                    errorElement.style.display = 'block';
+                }
+            }
+            
+            function displayDoctors(doctors) {
+                doctorsContainer.innerHTML = '';
+                doctors.forEach(doctor => {
+                    const imageUrl = doctor.recipe_template_url || 'https://via.placeholder.com/300x200?text=Sin+imagen+de+receta';
+                    const card = document.createElement('div');
+                    card.className = 'doctor-card';
+                    card.innerHTML = `
+                        <img src="${imageUrl}" alt="${doctor.full_name}" class="doctor-image" onerror="this.src='https://via.placeholder.com/300x200?text=Imagen+no+disponible'">
+                        <div class="doctor-info">
+                            <h3 class="doctor-name">${doctor.full_name || 'Nombre no disponible'}</h3>
+                            <p class="doctor-specialty">${doctor.specialty || 'Especialidad no especificada'}</p>
+                            <p class="doctor-license">Licencia: ${doctor.license_id || 'No disponible'}</p>
+                            <button class="btn btn-recipe" data-id="${doctor.id}">Configurar Coordenadas</button>
+                        </div>
+                    `;
+                    doctorsContainer.appendChild(card);
+                });
+                
+                document.querySelectorAll('.btn-recipe').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        const id = e.target.getAttribute('data-id');
+                        const doc = doctors.find(d => d.id == id);
+                        if (doc) openCoordinatesModal(doc);
+                    });
+                });
+            }
+            
+            function openCoordinatesModal(doctor) {
+                currentDoctor = doctor;
+                points = doctor.recipe_coordinates || [];
+                
+                const imageUrl = doctor.recipe_template_url || 'https://via.placeholder.com/800x500?text=Sin+imagen+de+receta';
+                
+                const tempImg = new Image();
+                tempImg.onload = function() {
+                    currentDoctor.originalWidth = tempImg.naturalWidth;
+                    currentDoctor.originalHeight = tempImg.naturalHeight;
+                    
+                    modalImage.src = imageUrl;
+                    modalImage.onload = function() {
+                        adjustOverlayToImage();
+                        setupClickEvents();
+                        updatePointsList();
+                    };
+                };
+                tempImg.onerror = function() {
+                    currentDoctor.originalWidth = 1000;
+                    currentDoctor.originalHeight = 1000;
+                    modalImage.src = 'https://via.placeholder.com/800x500?text=Imagen+no+disponible';
+                    modalImage.onload = function() {
+                        adjustOverlayToImage();
+                        setupClickEvents();
+                        updatePointsList();
+                    };
+                };
+                tempImg.src = imageUrl;
+                
+                // Limpiar overlay
+                canvasOverlay.innerHTML = '';
+                coordinatesList.innerHTML = '';
+                pointLetterInput.value = 'A';
+                pointSizeInput.value = '24';
+                coordinatesDisplay.textContent = 'x: 0, y: 0';
+                modal.style.display = 'block';
+            }
+            
+            function closeModal() {
+                modal.style.display = 'none';
+                points = [];
+                currentPoint = null;
+                canvasOverlay.removeEventListener('click', handleCanvasClick);
+            }
+
+            function adjustOverlayToImage() {
+                const container = document.querySelector('.image-container');
+                const img = modalImage;
+                const overlay = canvasOverlay;
+
+                // Forzar recálculo de layout
+                container.offsetHeight;
+
+                const containerRect = container.getBoundingClientRect();
+                const imgRect = img.getBoundingClientRect();
+
+                // Ajustar el overlay para que coincida EXACTAMENTE con la imagen visible
+                overlay.style.position = 'absolute';
+                overlay.style.top = (imgRect.top - containerRect.top) + 'px';
+                overlay.style.left = (imgRect.left - containerRect.left) + 'px';
+                overlay.style.width = imgRect.width + 'px';
+                overlay.style.height = imgRect.height + 'px';
+                overlay.style.pointerEvents = 'auto';
+
+                // ⚠️ Opcional: descomenta para ver el overlay (debug)
+                // overlay.style.backgroundColor = 'rgba(0,255,0,0.1)';
+            }
+
+            function setupClickEvents() {
+                canvasOverlay.removeEventListener('click', handleCanvasClick);
+                canvasOverlay.addEventListener('click', handleCanvasClick);
+            }
+
+            function handleCanvasClick(e) {
+                const overlay = canvasOverlay;
+                const rect = overlay.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+
+                coordinatesDisplay.textContent = `x: ${Math.round(x)}, y: ${Math.round(y)}`;
+
+                // Crear punto visual
+                const marker = document.createElement('div');
+                marker.className = 'point-marker';
+                marker.style.left = x + 'px';
+                marker.style.top = y + 'px';
+
+                // Crear etiqueta de letra
+                const label = document.createElement('div');
+                label.className = 'letter-label';
+                label.textContent = pointLetterInput.value || 'A';
+                label.style.fontSize = pointSizeInput.value + 'px';
+                label.style.left = x + 'px';
+                label.style.top = y + 'px';
+
+                // Agregar eventos para mover el punto (opcional)
+                let isDragging = false;
+                let offsetX, offsetY;
+
+                label.addEventListener('mousedown', (e) => {
+                    isDragging = true;
+                    offsetX = e.clientX - label.offsetLeft;
+                    offsetY = e.clientY - label.offsetTop;
+                    label.style.zIndex = '30';
+                    e.preventDefault();
+                });
+
+                document.addEventListener('mousemove', (e) => {
+                    if (!isDragging) return;
+                    const newX = e.clientX - offsetX;
+                    const newY = e.clientY - offsetY;
+                    label.style.left = newX + 'px';
+                    label.style.top = newY + 'px';
+                    marker.style.left = newX + 'px';
+                    marker.style.top = newY + 'px';
+                    coordinatesDisplay.textContent = `x: ${Math.round(newX)}, y: ${Math.round(newY)}`;
+                });
+
+                document.addEventListener('mouseup', () => {
+                    if (isDragging) {
+                        isDragging = false;
+                        label.style.zIndex = '21';
+                    }
+                });
+
+                // Añadir al overlay
+                overlay.appendChild(marker);
+                overlay.appendChild(label);
+
+                // Guardar punto temporalmente
+                currentPoint = {
+                    x: Math.round(x),
+                    y: Math.round(y),
+                    letter: pointLetterInput.value || 'A',
+                    size: parseInt(pointSizeInput.value) || 24,
+                    marker,
+                    label
+                };
+            }
+
+            addPointBtn.addEventListener('click', () => {
+                if (!currentPoint) {
+                    alert('Haga clic en la imagen para marcar un punto primero.');
+                    return;
+                }
+
+                // Guardar punto permanente
+                const savedPoint = {
+                    id: Date.now(),
+                    x: currentPoint.x,
+                    y: currentPoint.y,
+                    letter: currentPoint.letter,
+                    size: currentPoint.size
+                };
+
+                points.push(savedPoint);
+
+                // Asociar ID al elemento para eliminarlo después
+                currentPoint.label.dataset.pointId = savedPoint.id;
+                currentPoint.marker.dataset.pointId = savedPoint.id;
+
+                updatePointsList();
+                currentPoint = null; // Reiniciar para nuevo punto
+            });
+
+            saveCoordinatesBtn.addEventListener('click', savePointsToDoctor);
+
+            function updatePointsList() {
+                coordinatesList.innerHTML = '';
+                points.forEach(point => {
+                    const item = document.createElement('div');
+                    item.className = 'coordinate-item';
+                    item.innerHTML = `
+                        <div class="coordinate-info">
+                            <span class="coordinate-name">Letra: "${point.letter}"</span>
+                            <span class="coordinate-values">x: ${point.x}, y: ${point.y}, tamaño: ${point.size}px</span>
+                        </div>
+                        <div class="coordinate-actions">
+                            <button class="btn btn-small btn-danger" data-id="${point.id}">Eliminar</button>
+                        </div>
+                    `;
+                    coordinatesList.appendChild(item);
+                });
+
+                document.querySelectorAll('.btn-danger').forEach(btn => {
+                    btn.addEventListener('click', e => {
+                        const id = parseInt(e.target.getAttribute('data-id'));
+                        points = points.filter(p => p.id !== id);
+                        
+                        // Remover elementos visuales
+                        const marker = document.querySelector(`.point-marker[data-point-id="${id}"]`);
+                        const label = document.querySelector(`.letter-label[data-point-id="${id}"]`);
+                        if (marker) marker.remove();
+                        if (label) label.remove();
+                        
+                        updatePointsList();
+                    });
+                });
+            }
+
+            async function savePointsToDoctor() {
+                if (!currentDoctor) return;
+
+                const originalWidth = currentDoctor.originalWidth || 1000;
+                const originalHeight = currentDoctor.originalHeight || 1000;
+
+                const imgRect = modalImage.getBoundingClientRect();
+                const displayWidth = imgRect.width;
+                const displayHeight = imgRect.height;
+
+                const scaleX = originalWidth / displayWidth;
+                const scaleY = originalHeight / displayHeight;
+
+                const scaledPoints = points.map(point => ({
+                    ...point,
+                    x: Math.round(point.x * scaleX),
+                    y: Math.round(point.y * scaleY)
+                }));
+
+                const { error } = await supabase
+                    .from('doctors')
+                    .update({
+                        recipe_coordinates: scaledPoints,
+                        confirmado: 'si'
+                    })
+                    .eq('id', currentDoctor.id);
+
+                if (error) {
+                    console.error("Error al guardar puntos:", error);
+                    alert("Error al guardar los puntos. Por favor, intente nuevamente.");
+                    return;
+                }
+
+                alert("✅ Puntos guardados y doctor confirmado.");
+                closeModal();
+                loadDoctors();
+            }
+        });
+    </script>
+</body>
+</html>

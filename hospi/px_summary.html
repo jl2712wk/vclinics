@@ -1,0 +1,108 @@
+<!-- receta.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Receta Médica • MediScript AI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #f5f8ff;
+      color: #1e293b;
+    }
+  </style>
+</head>
+<body class="p-4 sm:p-6">
+  <div class="max-w-2xl mx-auto">
+    <div id="loading" class="text-center py-10 text-indigo-700">Cargando receta...</div>
+    <div id="error" class="hidden bg-red-50 text-red-700 p-4 rounded-lg mb-6 text-center">❌ Receta no encontrada o ya no está activa.</div>
+    
+    <div id="receta" class="hidden bg-white rounded-xl shadow-sm p-6 sm:p-8">
+      <div class="text-center mb-6">
+        <h1 class="text-2xl font-bold text-indigo-900">Receta Médica</h1>
+        <p class="text-sm text-indigo-600 mt-1">Documento generado por IA • MediScript AI</p>
+      </div>
+
+      <div class="space-y-5">
+        <div>
+          <h2 class="font-semibold text-indigo-800 mb-1">Médico</h2>
+          <p id="medico-nombre" class="text-gray-800"></p>
+          <p id="medico-especialidad" class="text-gray-600 text-sm"></p>
+        </div>
+
+        <div>
+          <h2 class="font-semibold text-indigo-800 mb-1">Motivo de Consulta</h2>
+          <p id="motivo" class="text-gray-800 whitespace-pre-line"></p>
+        </div>
+
+        <div>
+          <h2 class="font-semibold text-indigo-800 mb-1">Diagnóstico y Justificación</h2>
+          <p id="diagnostico" class="text-gray-800 whitespace-pre-line"></p>
+        </div>
+
+        <div>
+          <h2 class="font-semibold text-indigo-800 mb-1">Plan Terapéutico</h2>
+          <p id="plan" class="text-gray-800 whitespace-pre-line"></p>
+        </div>
+      </div>
+
+      <div class="mt-8 pt-6 border-t border-indigo-100 text-center text-xs text-gray-500">
+        ID: <span id="receta-id" class="font-mono"></span> | Fecha: <span id="receta-fecha" class="font-mono"></span>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const supabaseUrl = 'https://TU_PROYECTO.supabase.co';
+    const supabaseAnonKey = 'TU_ANON_PUBLIC_KEY';
+    const supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const id = urlParams.get('id');
+
+    const loadingEl = document.getElementById('loading');
+    const errorEl = document.getElementById('error');
+    const recetaEl = document.getElementById('receta');
+
+    if (!id) {
+      loadingEl.classList.add('hidden');
+      errorEl.textContent = '❌ Falta el ID de la receta en la URL.';
+      errorEl.classList.remove('hidden');
+    } else {
+      supabase
+        .from('patients_summary')
+        .select('*')
+        .eq('id_consulta', id)
+        .single()
+        .then(({ data, error }) => {
+          loadingEl.classList.add('hidden');
+
+          if (error || !data) {
+            errorEl.classList.remove('hidden');
+            return;
+          }
+
+          // Rellena los campos
+          document.getElementById('medico-nombre').textContent = data.medico_nombre || '—';
+          document.getElementById('medico-especialidad').textContent = data.medico_especialidad || '—';
+          document.getElementById('motivo').textContent = data.motivo_consulta || '—';
+          document.getElementById('diagnostico').textContent = data.diagnostico || '—';
+          document.getElementById('plan').textContent = data.plan_terapeutico || '—';
+          document.getElementById('receta-id').textContent = data.id_consulta;
+          document.getElementById('receta-fecha').textContent = new Date(data.fecha).toLocaleString();
+
+          recetaEl.classList.remove('hidden');
+        })
+        .catch(err => {
+          console.error('Error al cargar receta:', err);
+          loadingEl.classList.add('hidden');
+          errorEl.classList.remove('hidden');
+        });
+    }
+  </script>
+</body>
+</html>
