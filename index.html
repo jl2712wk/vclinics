@@ -127,6 +127,14 @@
             background-image: linear-gradient(to right, #f1f5f9 1px, transparent 1px),
                               linear-gradient(to bottom, #f1f5f9 1px, transparent 1px);
         }
+        
+        /* Estilos tabla historial */
+        .history-item {
+            transition: all 0.2s;
+        }
+        .history-item:hover {
+            background-color: #f8fafc;
+        }
     </style>
 </head>
 <body>
@@ -260,78 +268,6 @@
             </div>
         </section>
 
-        <!-- Testimonios / Social Proof -->
-        <section class="py-24 px-6 bg-slate-50">
-            <div class="max-w-4xl mx-auto">
-                <div class="text-center mb-16">
-                    <h3 class="text-3xl font-bold text-slate-900">Lo que dicen tus colegas</h3>
-                </div>
-                <div class="grid md:grid-cols-2 gap-8">
-                    <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
-                        <div class="flex items-center gap-1 text-amber-400 mb-4">
-                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
-                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
-                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
-                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
-                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
-                        </div>
-                        <p class="text-slate-600 italic mb-6">"He reducido el tiempo administrativo de mis consultas a la mitad. Ahora puedo mirar a mis pacientes a los ojos en lugar de a la pantalla."</p>
-                        <div class="flex items-center gap-4">
-                            <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center font-bold text-indigo-700">DR</div>
-                            <div>
-                                <p class="font-bold text-slate-900 text-sm">Dr. Roberto Méndez</p>
-                                <p class="text-xs text-slate-500">Cardiólogo</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
-                        <div class="flex items-center gap-1 text-amber-400 mb-4">
-                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
-                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
-                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
-                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
-                            <i data-lucide="star" class="w-4 h-4 fill-current"></i>
-                        </div>
-                        <p class="text-slate-600 italic mb-6">"La capacidad de la IA para resumir el plan terapéutico en lenguaje sencillo para el paciente es impresionante. Mejora mucho la adherencia."</p>
-                        <div class="flex items-center gap-4">
-                            <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center font-bold text-green-700">dra</div>
-                            <div>
-                                <p class="font-bold text-slate-900 text-sm">Dra. Elena Torres</p>
-                                <p class="text-xs text-slate-500">Pediatra</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Seguridad -->
-        <section id="seguridad" class="py-20 px-6 bg-white border-t border-slate-100">
-            <div class="max-w-5xl mx-auto flex flex-col md:flex-row items-center gap-12">
-                <div class="md:w-1/2">
-                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-50 text-green-700 text-xs font-bold mb-6 border border-green-100 uppercase tracking-wide">
-                        <i data-lucide="shield-check" class="w-4 h-4"></i> Privacidad Garantizada
-                    </div>
-                    <h3 class="text-3xl font-bold text-slate-900 mb-4">Tus datos y los de tus pacientes están seguros</h3>
-                    <p class="text-slate-600 mb-6 leading-relaxed">Entendemos la sensibilidad de los datos médicos. ClinicalV utiliza encriptación de extremo a extremo y no almacena las grabaciones de audio después de ser procesadas.</p>
-                    <ul class="space-y-3">
-                        <li class="flex items-center gap-3 text-slate-700">
-                            <i data-lucide="check" class="w-5 h-5 text-green-500"></i> Encriptación SSL/TLS
-                        </li>
-                        <li class="flex items-center gap-3 text-slate-700">
-                            <i data-lucide="check" class="w-5 h-5 text-green-500"></i> Procesamiento efímero de audio
-                        </li>
-                        <li class="flex items-center gap-3 text-slate-700">
-                            <i data-lucide="check" class="w-5 h-5 text-green-500"></i> Resúmenes editables por el profesional
-                        </li>
-                    </ul>
-                </div>
-                <div class="md:w-1/2 bg-slate-50 p-8 rounded-2xl border border-slate-100 flex items-center justify-center">
-                     <i data-lucide="lock" class="w-32 h-32 text-slate-200"></i>
-                </div>
-            </div>
-        </section>
-
         <!-- CTA Final -->
         <section class="py-24 px-6 bg-indigo-600 text-white text-center">
             <div class="max-w-3xl mx-auto">
@@ -356,7 +292,7 @@
                     <a href="#" class="hover:text-white transition">Privacidad</a>
                     <a href="#" class="hover:text-white transition">Contacto</a>
                 </div>
-                <p class="text-sm opacity-50">© 2025 ClinicalV Project. Hecho por estudiantes de medicina.</p>
+                <p class="text-sm opacity-50">© 2025 ClinicalV Project.</p>
             </div>
         </footer>
     </div>
@@ -432,11 +368,50 @@
                         <span id="display-specialty" class="block text-xs text-indigo-600 uppercase font-bold tracking-wider"></span>
                     </div>
                 </div>
-                <div class="text-center mb-6">
+                
+                <div class="space-y-4">
                     <button id="consultation-button" onclick="handleConsultationButton()" class="w-full py-4 bg-indigo-600 text-white font-bold text-lg rounded-2xl hover:bg-indigo-700 transition shadow-lg hover:shadow-indigo-500/30 flex items-center justify-center gap-3">
                         <i data-lucide="mic" class="w-6 h-6"></i><span id="button-text">Comenzar Consulta</span>
                     </button>
-                    <p class="text-xs text-slate-400 mt-2">Presiona para grabar audio y generar el resumen</p>
+                    
+                    <!-- Boton de Historial -->
+                    <button onclick="toggleHistory()" class="w-full py-3 bg-white text-indigo-600 border border-indigo-200 font-bold text-md rounded-2xl hover:bg-indigo-50 transition flex items-center justify-center gap-3">
+                        <i data-lucide="history" class="w-5 h-5"></i><span>Historial de Pacientes</span>
+                    </button>
+                    
+                    <p class="text-xs text-center text-slate-400 mt-2">Presiona para grabar audio y generar el resumen</p>
+                </div>
+            </div>
+
+            <!-- HISTORIAL SECTION (NUEVO) -->
+            <div id="history-section" class="hidden">
+                <div class="flex items-center justify-between mb-4 pb-4 border-b border-slate-100">
+                    <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
+                        <i data-lucide="history" class="w-5 h-5 text-indigo-600"></i>
+                        Historial Médico
+                    </h2>
+                    <button onclick="toggleHistory()" class="text-slate-400 hover:text-slate-600 bg-slate-100 p-1.5 rounded-full transition">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+
+                <!-- Buscador + Filtro Fecha -->
+                <div class="flex gap-2 mb-6">
+                    <div class="relative flex-1">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i data-lucide="search" class="w-4 h-4 text-slate-400"></i>
+                        </div>
+                        <input type="text" id="history-search-input" oninput="debounceFetchHistory()" class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Nombre o Cédula...">
+                    </div>
+                    
+                    <div class="relative w-1/3">
+                        <input type="date" id="history-date-filter" onchange="fetchHistory()" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none text-slate-600">
+                    </div>
+                </div>
+
+                <!-- Lista de Resultados -->
+                <div id="history-list-container" class="space-y-3 max-h-[400px] overflow-y-auto pr-1">
+                    <div class="text-center py-8 text-slate-400 text-sm">Cargando historial...</div>
                 </div>
             </div>
 
@@ -452,7 +427,6 @@
                     </span>
                 </div>
                 
-                <!-- Se ha eliminado max-h y overflow-y-auto para evitar scroll interno -->
                 <div class="space-y-4 mb-6">
                     <p class="text-xs text-slate-400 italic mb-2">Edita los campos manualmente o usa el micrófono individual.</p>
 
@@ -485,7 +459,6 @@
                                     <i data-lucide="mic" class="w-3.5 h-3.5"></i>
                                 </button>
                             </label>
-                            <!-- Cambiado de number a text para aceptar "10 meses", etc. -->
                             <input type="text" id="edad-paciente" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
                         </div>
                     </div>
@@ -569,7 +542,7 @@
     </div>
 
     <!-- ========================================== -->
-    <!-- 3. MODAL DE PAGO (NUEVO - 2 PASOS)         -->
+    <!-- 3. MODAL DE PAGO                           -->
     <!-- ========================================== -->
     <div id="payment-modal" class="fixed inset-0 modal-overlay z-[2000] hidden flex items-center justify-center p-4">
         <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden transform scale-95 transition-all duration-300">
@@ -646,7 +619,7 @@
                     <div class="space-y-3">
                         <input type="hidden" id="selected-plan-id">
                         <input type="hidden" id="selected-plan-amount">
-                        <input type="hidden" id="selected-plan-credits"> <!-- NUEVO CAMPO -->
+                        <input type="hidden" id="selected-plan-credits">
                         
                         <div>
                             <label class="block text-xs font-bold text-slate-500 mb-1">REFERENCIA (4-6 dígitos)</label>
@@ -692,11 +665,13 @@
     let mediaRecorder, audioChunks = [], audioMimeType = '';
     let activeStream = null;
     let currentExchangeRate = 0; 
+    let historyTimeout = null;
 
     const landingPage = document.getElementById('landing-page');
     const appInterface = document.getElementById('app-interface');
     const consultationSection = document.getElementById('consultation-section');
     const summarySection = document.getElementById('summary-section');
+    const historySection = document.getElementById('history-section');
     const messagePopup = document.getElementById('message-popup');
     const consultationButton = document.getElementById('consultation-button');
     const paymentModal = document.getElementById('payment-modal');
@@ -835,6 +810,124 @@
         }
     }
 
+    // === HISTORY LOGIC (NUEVO) ===
+    function toggleHistory() {
+        if(historySection.classList.contains('hidden')) {
+            // Mostrar
+            consultationSection.classList.add('hidden');
+            summarySection.classList.add('hidden');
+            historySection.classList.remove('hidden');
+            fetchHistory(); // Cargar datos
+        } else {
+            // Ocultar (volver a dashboard)
+            historySection.classList.add('hidden');
+            consultationSection.classList.remove('hidden');
+        }
+    }
+
+    function debounceFetchHistory() {
+        clearTimeout(historyTimeout);
+        historyTimeout = setTimeout(() => fetchHistory(), 500);
+    }
+
+    async function fetchHistory() {
+        const queryText = document.getElementById('history-search-input').value.trim();
+        const dateFilter = document.getElementById('history-date-filter').value;
+        const container = document.getElementById('history-list-container');
+        
+        container.innerHTML = '<div class="text-center py-8 text-slate-400 text-sm"><div class="button-spinner mx-auto border-slate-400 mb-2"></div>Cargando...</div>';
+
+        try {
+            // Construir Query base
+            let query = supabase
+                .from('patients_summary')
+                .select('*');
+
+            // --- FILTRO DE MÉDICO ACTIVO ---
+            if (currentUser) { 
+                query = query.eq('doctor_id', currentUser.id); 
+            }
+
+            // Ordenar por fecha
+            query = query.order('fecha', { ascending: false }).limit(50);
+
+            // Filtro de Fecha (Rango de 00:00 a 23:59 del día seleccionado)
+            if (dateFilter) {
+                // Asumimos que la columna 'fecha' puede ser timestamp
+                // .gte = Mayor o igual al inicio del día
+                // .lte = Menor o igual al final del día
+                query = query.gte('fecha', `${dateFilter}T00:00:00`)
+                             .lte('fecha', `${dateFilter}T23:59:59`);
+            }
+
+            // Filtro de búsqueda (si el usuario escribió algo)
+            if (queryText) {
+                query = query.or(`nombre_paciente.ilike.%${queryText}%,cedula_paciente.ilike.%${queryText}%`);
+            }
+
+            const { data, error } = await query;
+
+            if (error) throw error;
+
+            container.innerHTML = '';
+            
+            if (!data || data.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-8 text-slate-400">
+                        <i data-lucide="search-x" class="w-8 h-8 mx-auto mb-2 opacity-50"></i>
+                        <p>No se encontraron pacientes.</p>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            data.forEach(item => {
+                const nombre = item.nombre_paciente || 'Sin Nombre';
+                const cedula = item.cedula_paciente || 'S/C';
+                const url = item.url_informe;
+                // Formatear fecha si existe
+                const fechaRaw = item.fecha ? new Date(item.fecha).toLocaleDateString() : ''; 
+                const hasUrl = url && url.length > 5;
+
+                const cardHtml = `
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between history-item">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-sm shrink-0">
+                                ${nombre.charAt(0).toUpperCase()}
+                            </div>
+                            <div class="min-w-0">
+                                <p class="font-bold text-slate-900 truncate pr-2">${nombre}</p>
+                                <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-xs text-slate-500">
+                                    <span class="flex items-center gap-1"><i data-lucide="credit-card" class="w-3 h-3"></i> ${cedula}</span>
+                                    ${fechaRaw ? `<span class="hidden sm:inline">•</span><span class="flex items-center gap-1"><i data-lucide="calendar" class="w-3 h-3"></i> ${fechaRaw}</span>` : ''}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="shrink-0">
+                            ${hasUrl ? `
+                                <a href="${url}" target="_blank" class="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-lg hover:bg-indigo-100 transition border border-indigo-100">
+                                    <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+                                    Ver Informe
+                                </a>
+                            ` : `
+                                <span class="px-3 py-1.5 bg-slate-50 text-slate-400 text-xs font-medium rounded-lg border border-slate-100 cursor-not-allowed">
+                                    Sin Informe
+                                </span>
+                            `}
+                        </div>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', cardHtml);
+            });
+            lucide.createIcons();
+
+        } catch (err) {
+            console.error(err);
+            container.innerHTML = `<p class="text-center text-red-500 text-sm py-4">Error al cargar historial.</p>`;
+        }
+    }
+
     // === PAYMENT LOGIC (2 STEPS) ===
     function openPaymentModal() {
         paymentModal.classList.remove('hidden');
@@ -927,10 +1020,6 @@
 
         showLoading();
         try {
-            // Nota importante para el usuario:
-            // Asegúrate de haber agregado la columna 'consultations_count' a tu tabla en Supabase
-            // SQL: ALTER TABLE payment_reports ADD COLUMN consultations_count INT;
-            
             const { error } = await supabase.from('payment_reports').insert([{
                 doctor_id: currentUser.id,
                 plan_name: planName,
