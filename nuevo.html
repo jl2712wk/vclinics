@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClinicalV - Acceso Libre</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body { font-family: sans-serif; background: #f0f9ff; }
+        .recording { animation: pulse 1.5s infinite; background-color: #ef4444 !important; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+        /* Ocultar scrollbar en textareas pero permitir scroll */
+        textarea::-webkit-scrollbar { width: 0px; background: transparent; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center p-4">
+
+    <header class="w-full max-w-md bg-white p-4 rounded-xl shadow-sm mb-4 flex justify-between items-center">
+        <div class="flex items-center gap-2 text-indigo-700 font-bold text-xl">
+            <i data-lucide="activity"></i> ClinicalV
+        </div>
+        <div class="text-xs text-slate-400 font-mono">BETA v1.0</div>
+    </header>
+
+    <div id="loader" class="fixed inset-0 bg-slate-900/90 z-50 hidden flex flex-col items-center justify-center text-white">
+        <div class="w-12 h-12 border-4 border-white border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p id="loader-text" class="font-bold text-lg">Procesando...</p>
+    </div>
+
+    <main class="w-full max-w-md space-y-4">
+
+        <div id="section-record" class="bg-white p-8 rounded-2xl shadow-lg text-center">
+            <h2 class="text-slate-700 font-bold mb-2">Dictar Consulta</h2>
+            <p class="text-slate-400 text-sm mb-8">Presiona para comenzar a hablar</p>
+            
+            <button id="btn-record" onclick="toggleRecord()" class="w-24 h-24 bg-indigo-600 rounded-full flex items-center justify-center text-white shadow-xl mx-auto transition-transform hover:scale-105 active:scale-95">
+                <i data-lucide="mic" class="w-10 h-10"></i>
+            </button>
+            
+            <p id="status" class="mt-6 text-indigo-600 font-medium h-6"></p>
+        </div>
+
+        <div id="section-edit" class="hidden bg-white p-6 rounded-2xl shadow-lg">
+            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <h3 class="font-bold text-slate-800">Editar Resumen</h3>
+                <button onclick="reset()" class="text-xs text-red-500 font-bold">BORRAR</button>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <input type="text" id="nombre" placeholder="Nombre Paciente" class="col-span-2 w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 font-bold">
+                <input type="tel" id="telefono" placeholder="WhatsApp (Ej: 0414...)" class="col-span-2 w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+
+            <div class="space-y-3">
+                <textarea id="txt-diag" placeholder="Diagnóstico..." class="w-full bg-slate-50 border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 min-h-[60px]"></textarea>
+                <textarea id="txt-plan" placeholder="Plan / Tratamiento..." class="w-full bg-slate-50 border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 min-h-[80px]"></textarea>
+                <textarea id="txt-ind" placeholder="Indicaciones..." class="w-full bg-slate-50 border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 min-h-[60px]"></textarea>
+            </div>
+
+            <div class="mt-6 space-y-3">
+                <button onclick="sendWhatsapp()" class="w-full py-4 bg-green-500 text-white font-bold rounded-xl shadow-md hover:bg-green-600 flex items-center justify-center gap-2 transition-transform active:scale-95">
+                    <i data-lucide="message-circle"></i> Enviar por WhatsApp
+                </button>
+                <button onclick="copyText()" class="w-full py-3 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 flex items-center justify-center gap-2">
+                    <i data-lucide="copy"></i> Copiar Texto
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // --- CONFIGURACIÓN ---
+        // Pega aquí TU Webhook de n8n
+        const N8N_WEBHOOK = 'https://general-empresas-n8n.w06teu.easypanel.host/webhook/24d6b820-8227-4167-a747-f6be56cd7c34';
+        
+        // Inicializar iconos al cargar
+        window.onload = () => {
+            lucide.createIcons();
+        };
+
+        // --- VARIABLES ---
+        let mediaRecorder;
+        let audioChunks = [];
+        let isRecording = false;
+
+        // --- FUNCIONES ---
+
+        async function toggleRecord() {
+            const btn = document.getElementById('btn-record');
+            const status = document.getElementById('status');
+
+            if(!isRecording) {
+                // INICIAR GRABACIÓN
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+                    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+                    mediaRecorder.onstop = processAudio;
+                    
+                    mediaRecorder.start();
+                    isRecording = true;
+                    
+                    btn.classList.add('recording');
+                    btn.innerHTML = '<i data-lucide="square" class="w-10 h-10 fill-current"></i>'; // Icono Stop
+                    status.textContent = "Grabando... Toca para terminar";
+                    lucide.createIcons();
+                } catch(err) {
+                    alert("Error: No se pudo acceder al micrófono.");
+                }
+            } else {
+                // DETENER GRABACIÓN
+                mediaRecorder.stop();
+                isRecording = false;
+                
+                btn.classList.remove('recording');
+                btn.innerHTML = '<i data-lucide="mic" class="w-10 h-10"></i>';
+                status.textContent = "";
+                lucide.createIcons();
+            }
+        }
+
+        async function processAudio() {
+            const loader = document.getElementById('loader');
+            loader.classList.remove('hidden');
+            
+            const blob = new Blob(audioChunks, { type: 'audio/webm' });
+            const reader = new FileReader();
+            reader.readAsDataURL(blob);
+            
+            reader.onloadend = async () => {
+                const base64 = reader.result.split(',')[1];
+                
+                try {
+                    // Enviar a n8n
+                    const res = await fetch(N8N_WEBHOOK, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ audio: base64, mimeType: 'audio/webm' })
+                    });
+                    
+                    if(!res.ok) throw new Error("Error en n8n");
+                    
+                    const data = await res.json();
+                    const output = data.output || data; // Ajustar según respuesta n8n
+
+                    // Llenar campos
+                    document.getElementById('nombre').value = output.nombre_paciente || '';
+                    document.getElementById('telefono').value = output.telefono_paciente || '';
+                    
+                    // Llenar textareas
+                    document.getElementById('txt-diag').value = `MOTIVO: ${output.motivo || ''}\n\nDX: ${output.diagnostico || ''}`;
+                    document.getElementById('txt-plan').value = output.plan || '';
+                    document.getElementById('txt-ind').value = output.recomendaciones_y_precauciones || '';
+                    
+                    // Mostrar Editor, Ocultar Grabadora
+                    document.getElementById('section-record').classList.add('hidden');
+                    document.getElementById('section-edit').classList.remove('hidden');
+                    
+                    // Ajustar alturas
+                    resizeAllTextareas();
+
+                } catch(err) {
+                    alert("Error procesando: " + err.message);
+                } finally {
+                    loader.classList.add('hidden');
+                }
+            };
+        }
+
+        function sendWhatsapp() {
+            const phone = document.getElementById('telefono').value.replace(/\D/g, '');
+            const nombre = document.getElementById('nombre').value;
+            
+            if(!phone) return alert("Falta el teléfono del paciente");
+            
+            // Lógica Venezuela
+            let finalPhone = phone;
+            if(phone.length === 11 && phone.startsWith('0')) finalPhone = '58' + phone.substring(1);
+            else if(phone.length === 10) finalPhone = '58' + phone;
+
+            const msg = `*RESUMEN MÉDICO* 🩺\n👤 ${nombre}\n\n🔎 *DIAGNÓSTICO:*\n${document.getElementById('txt-diag').value}\n\n💊 *TRATAMIENTO:*\n${document.getElementById('txt-plan').value}\n\n⚠️ *INDICACIONES:*\n${document.getElementById('txt-ind').value}\n\n_Enviado con ClinicalV_`;
+
+            window.open(`https://wa.me/${finalPhone}?text=${encodeURIComponent(msg)}`, '_blank');
+        }
+        
+        function copyText() {
+            const msg = `PACIENTE: ${document.getElementById('nombre').value}\n\n${document.getElementById('txt-diag').value}\n\nPLAN:\n${document.getElementById('txt-plan').value}`;
+            navigator.clipboard.writeText(msg).then(() => alert("Texto Copiado"));
+        }
+
+        function reset() {
+            if(confirm("¿Borrar todo y empezar de nuevo?")) {
+                document.getElementById('section-record').classList.remove('hidden');
+                document.getElementById('section-edit').classList.add('hidden');
+                document.querySelectorAll('input, textarea').forEach(el => el.value = '');
+            }
+        }
+        
+        function resizeAllTextareas() {
+            document.querySelectorAll('textarea').forEach(el => {
+                el.style.height = 'auto';
+                el.style.height = el.scrollHeight + 'px';
+            });
+        }
+    </script>
+</body>
+</html>
