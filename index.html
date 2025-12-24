@@ -8,19 +8,26 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         body { font-family: sans-serif; background: #f0f9ff; }
-        .recording { animation: pulse 1.5s infinite; background-color: #ef4444 !important; }
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+        
+        /* Animación del botón principal */
+        .recording-main { animation: pulse-main 1.5s infinite; background-color: #ef4444 !important; }
+        @keyframes pulse-main { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+        
+        /* Animación de los mini-micrófonos */
+        .mic-active { color: #ef4444 !important; animation: pulse-mini 1s infinite; }
+        @keyframes pulse-mini { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
         /* Ocultar scrollbar en textareas pero permitir scroll */
         textarea::-webkit-scrollbar { width: 0px; background: transparent; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col items-center p-4">
+<body class="min-h-screen flex flex-col items-center p-4 pb-20">
 
     <header class="w-full max-w-md bg-white p-4 rounded-xl shadow-sm mb-4 flex justify-between items-center">
         <div class="flex items-center gap-2 text-indigo-700 font-bold text-xl">
             <i data-lucide="activity"></i> ClinicalV
         </div>
-        <div class="text-xs text-slate-400 font-mono">BETA v1.1</div>
+        <div class="text-xs text-slate-400 font-mono">BETA v1.2</div>
     </header>
 
     <div id="loader" class="fixed inset-0 bg-slate-900/90 z-50 hidden flex flex-col items-center justify-center text-white">
@@ -41,7 +48,7 @@
         </div>
 
         <div id="section-record" class="bg-white p-8 rounded-2xl shadow-lg text-center">
-            <h2 class="text-slate-700 font-bold mb-2">Dictar Consulta</h2>
+            <h2 class="text-slate-700 font-bold mb-2">Dictar Consulta Completa</h2>
             <p class="text-slate-400 text-sm mb-8">Presiona para comenzar a hablar</p>
             
             <button id="btn-record" onclick="toggleRecord()" class="w-24 h-24 bg-indigo-600 rounded-full flex items-center justify-center text-white shadow-xl mx-auto transition-transform hover:scale-105 active:scale-95">
@@ -54,21 +61,50 @@
         <div id="section-edit" class="hidden bg-white p-6 rounded-2xl shadow-lg">
             <div class="flex justify-between items-center mb-4 border-b pb-2">
                 <h3 class="font-bold text-slate-800">Editar Resumen</h3>
-                <button onclick="reset()" class="text-xs text-red-500 font-bold">BORRAR</button>
+                <button onclick="reset()" class="text-xs text-red-500 font-bold">BORRAR TODO</button>
+            </div>
+            <p class="text-xs text-slate-400 mb-4 flex items-center gap-1"><i data-lucide="info" class="w-3 h-3"></i> Toca los micrófonos pequeños para corregir campos individuales.</p>
+
+            <div class="space-y-3 mb-4">
+                <div class="relative">
+                    <input type="text" id="nombre" placeholder="Nombre Paciente" class="w-full bg-slate-50 border border-slate-200 rounded-lg pl-3 pr-10 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 font-bold">
+                    <button onclick="dictarCampo('nombre', this)" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 p-1 rounded-full transition-all">
+                        <i data-lucide="mic" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                 <div class="relative">
+                    <input type="tel" id="telefono" placeholder="WhatsApp (Ej: 0414...)" class="w-full bg-slate-50 border border-slate-200 rounded-lg pl-3 pr-10 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+                     <button onclick="dictarCampo('telefono', this)" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 p-1 rounded-full transition-all">
+                        <i data-lucide="mic" class="w-5 h-5"></i>
+                    </button>
+                </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-3 mb-4">
-                <input type="text" id="nombre" placeholder="Nombre Paciente" class="col-span-2 w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 font-bold">
-                <input type="tel" id="telefono" placeholder="WhatsApp (Ej: 0414...)" class="col-span-2 w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+            <div class="space-y-4">
+                <div class="relative">
+                    <label class="text-xs font-bold text-slate-400 mb-1 block">Diagnóstico</label>
+                    <textarea id="txt-diag" class="w-full bg-slate-50 border rounded-lg pl-3 pr-10 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 min-h-[60px]"></textarea>
+                     <button onclick="dictarCampo('txt-diag', this)" class="absolute right-2 top-8 text-slate-400 hover:text-indigo-600 p-1 rounded-full transition-all">
+                        <i data-lucide="mic" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                <div class="relative">
+                     <label class="text-xs font-bold text-slate-400 mb-1 block">Plan / Tratamiento</label>
+                    <textarea id="txt-plan" class="w-full bg-slate-50 border rounded-lg pl-3 pr-10 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 min-h-[80px]"></textarea>
+                     <button onclick="dictarCampo('txt-plan', this)" class="absolute right-2 top-8 text-slate-400 hover:text-indigo-600 p-1 rounded-full transition-all">
+                        <i data-lucide="mic" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                <div class="relative">
+                     <label class="text-xs font-bold text-slate-400 mb-1 block">Indicaciones</label>
+                    <textarea id="txt-ind" class="w-full bg-slate-50 border rounded-lg pl-3 pr-10 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 min-h-[60px]"></textarea>
+                     <button onclick="dictarCampo('txt-ind', this)" class="absolute right-2 top-8 text-slate-400 hover:text-indigo-600 p-1 rounded-full transition-all">
+                        <i data-lucide="mic" class="w-5 h-5"></i>
+                    </button>
+                </div>
             </div>
 
-            <div class="space-y-3">
-                <textarea id="txt-diag" placeholder="Diagnóstico..." class="w-full bg-slate-50 border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 min-h-[60px]"></textarea>
-                <textarea id="txt-plan" placeholder="Plan / Tratamiento..." class="w-full bg-slate-50 border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 min-h-[80px]"></textarea>
-                <textarea id="txt-ind" placeholder="Indicaciones..." class="w-full bg-slate-50 border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 min-h-[60px]"></textarea>
-            </div>
-
-            <div class="mt-6 space-y-3">
+            <div class="mt-8 space-y-3">
                 <button onclick="sendWhatsapp()" class="w-full py-4 bg-green-500 text-white font-bold rounded-xl shadow-md hover:bg-green-600 flex items-center justify-center gap-2 transition-transform active:scale-95">
                     <i data-lucide="message-circle"></i> Enviar por WhatsApp
                 </button>
@@ -82,23 +118,18 @@
 
     <script>
         // --- CONFIGURACIÓN ---
-        // Pega aquí TU Webhook de n8n
         const N8N_WEBHOOK = 'https://general-empresas-n8n.w06teu.easypanel.host/webhook/24d6b820-8227-4167-a747-f6be56cd7c34';
         
-        // Inicializar
         window.onload = () => {
             lucide.createIcons();
-            loadProfile(); // Cargar datos guardados
+            loadProfile();
         };
 
-        // --- GESTIÓN DE PERFIL (LOCALSTORAGE) ---
+        // --- GESTIÓN DE PERFIL ---
         function saveProfile() {
-            const name = document.getElementById('doc-name').value;
-            const spec = document.getElementById('doc-spec').value;
-            localStorage.setItem('clinicalv_doc_name', name);
-            localStorage.setItem('clinicalv_doc_spec', spec);
+            localStorage.setItem('clinicalv_doc_name', document.getElementById('doc-name').value);
+            localStorage.setItem('clinicalv_doc_spec', document.getElementById('doc-spec').value);
         }
-
         function loadProfile() {
             const name = localStorage.getItem('clinicalv_doc_name');
             const spec = localStorage.getItem('clinicalv_doc_spec');
@@ -106,42 +137,35 @@
             if(spec) document.getElementById('doc-spec').value = spec;
         }
 
-        // --- VARIABLES ---
+        // --- VARIABLES GRABADORA PRINCIPAL ---
         let mediaRecorder;
         let audioChunks = [];
         let isRecording = false;
 
-        // --- FUNCIONES ---
+        // --- FUNCIONES PRINCIPALES ---
 
         async function toggleRecord() {
             const btn = document.getElementById('btn-record');
             const status = document.getElementById('status');
 
             if(!isRecording) {
-                // INICIAR GRABACIÓN
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                     mediaRecorder = new MediaRecorder(stream);
                     audioChunks = [];
                     mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
                     mediaRecorder.onstop = processAudio;
-                    
                     mediaRecorder.start();
                     isRecording = true;
-                    
-                    btn.classList.add('recording');
-                    btn.innerHTML = '<i data-lucide="square" class="w-10 h-10 fill-current"></i>'; // Icono Stop
+                    btn.classList.add('recording-main');
+                    btn.innerHTML = '<i data-lucide="square" class="w-10 h-10 fill-current"></i>';
                     status.textContent = "Grabando... Toca para terminar";
                     lucide.createIcons();
-                } catch(err) {
-                    alert("Error: No se pudo acceder al micrófono.");
-                }
+                } catch(err) { alert("Error: No se pudo acceder al micrófono principal."); }
             } else {
-                // DETENER GRABACIÓN
                 mediaRecorder.stop();
                 isRecording = false;
-                
-                btn.classList.remove('recording');
+                btn.classList.remove('recording-main');
                 btn.innerHTML = '<i data-lucide="mic" class="w-10 h-10"></i>';
                 status.textContent = "";
                 lucide.createIcons();
@@ -151,65 +175,82 @@
         async function processAudio() {
             const loader = document.getElementById('loader');
             loader.classList.remove('hidden');
-            
             const blob = new Blob(audioChunks, { type: 'audio/webm' });
             const reader = new FileReader();
             reader.readAsDataURL(blob);
-            
             reader.onloadend = async () => {
                 const base64 = reader.result.split(',')[1];
-                
                 try {
                     const res = await fetch(N8N_WEBHOOK, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ audio: base64, mimeType: 'audio/webm' })
                     });
-                    
                     if(!res.ok) throw new Error("Error en n8n");
-                    
                     const data = await res.json();
                     const output = data.output || data; 
 
-                    // Llenar campos
                     document.getElementById('nombre').value = output.nombre_paciente || '';
                     document.getElementById('telefono').value = output.telefono_paciente || '';
-                    
-                    // Llenar textareas
+                    // Usamos append para no borrar lo que el médico haya podido corregir
                     document.getElementById('txt-diag').value = `MOTIVO: ${output.motivo || ''}\n\nDX: ${output.diagnostico || ''}`;
                     document.getElementById('txt-plan').value = output.plan || '';
                     document.getElementById('txt-ind').value = output.recomendaciones_y_precauciones || '';
                     
-                    // Mostrar Editor, Ocultar Grabadora
                     document.getElementById('section-record').classList.add('hidden');
                     document.getElementById('section-edit').classList.remove('hidden');
-                    
                     resizeAllTextareas();
-
-                } catch(err) {
-                    alert("Error procesando: " + err.message);
-                } finally {
-                    loader.classList.add('hidden');
-                }
+                } catch(err) { alert("Error procesando: " + err.message); } finally { loader.classList.add('hidden'); }
             };
         }
 
+        // --- NUEVA FUNCIÓN: DICTADO INDIVIDUAL ---
+        function dictarCampo(targetId, btnElement) {
+            if (!('webkitSpeechRecognition' in window)) return alert("Tu navegador no soporta dictado individual.");
+
+            const recognition = new webkitSpeechRecognition();
+            recognition.lang = 'es-ES';
+            recognition.interimResults = false;
+
+            const iconElement = btnElement.querySelector('i');
+            btnElement.classList.add('mic-active'); // Feedback visual
+
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript;
+                const targetField = document.getElementById(targetId);
+                
+                // Lógica inteligente: Si el campo está vacío, reemplaza. Si tiene texto, agrega un espacio y el nuevo texto.
+                if (targetField.value.trim() === "") {
+                    targetField.value = transcript;
+                } else {
+                    targetField.value += " " + transcript;
+                }
+                resizeAllTextareas();
+            };
+
+            recognition.onerror = (event) => { console.error("Error dictado:", event.error); };
+            
+            recognition.onend = () => {
+                btnElement.classList.remove('mic-active'); // Quitar feedback
+            };
+
+            recognition.start();
+        }
+
+
+        // --- ENVÍO Y UTILIDADES ---
         function sendWhatsapp() {
             const phone = document.getElementById('telefono').value.replace(/\D/g, '');
             const nombre = document.getElementById('nombre').value;
-            
-            // Datos del médico (Desde el Input, que se carga del caché)
             const docName = document.getElementById('doc-name').value || "Su Médico";
             const docSpec = document.getElementById('doc-spec').value || "Medicina General";
             
             if(!phone) return alert("Falta el teléfono del paciente");
             
-            // Lógica Venezuela
             let finalPhone = phone;
             if(phone.length === 11 && phone.startsWith('0')) finalPhone = '58' + phone.substring(1);
             else if(phone.length === 10) finalPhone = '58' + phone;
 
-            // Construir Mensaje Personalizado
             const msg = `*RESUMEN MÉDICO* 🩺\n*${docName}* - ${docSpec}\n\n👤 *Paciente:* ${nombre}\n\n🔎 *DIAGNÓSTICO:*\n${document.getElementById('txt-diag').value}\n\n💊 *TRATAMIENTO:*\n${document.getElementById('txt-plan').value}\n\n⚠️ *INDICACIONES:*\n${document.getElementById('txt-ind').value}\n\n_Enviado con ClinicalV_`;
 
             window.open(`https://wa.me/${finalPhone}?text=${encodeURIComponent(msg)}`, '_blank');
@@ -222,10 +263,10 @@
         }
 
         function reset() {
-            if(confirm("¿Borrar todo y empezar de nuevo?")) {
+            if(confirm("¿Borrar datos del paciente y volver al inicio?")) {
                 document.getElementById('section-record').classList.remove('hidden');
                 document.getElementById('section-edit').classList.add('hidden');
-                // Borramos todo MENOS el perfil del médico
+                // Limpiar solo campos del paciente
                 document.getElementById('nombre').value = '';
                 document.getElementById('telefono').value = '';
                 document.getElementById('txt-diag').value = '';
