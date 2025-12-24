@@ -3,1252 +3,208 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClinicalV - Asistente Médico Inteligente</title>
-    <!-- Tailwind CSS -->
+    <title>ClinicalV - Acceso Libre</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Supabase -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Iconos Lucide -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    
     <style>
-        /* Tipografía y Base */
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-        
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f8fafc; /* Slate 50 */
-            color: #1e293b;
-        }
-
-        /* --- ESTILOS DE LA APP --- */
-        .app-wrapper {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 16px;
-            background: linear-gradient(135deg, #e0e7ff 0%, #f5f3ff 100%);
-        }
-
-        .app-card {
-            background: white;
-            padding: 24px;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 600px;
-            position: relative;
-        }
-
-        /* Animaciones */
-        .recording { animation: pulse-red 1.5s infinite; background-color: #ef4444 !important; }
-        @keyframes pulse-red {
-            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
-        }
-
-        .processing { background-color: #4f46e5 !important; }
-        
-        /* Utilidades */
-        .hidden { display: none !important; }
-        .button-spinner {
-            border: 3px solid rgba(255,255,255,0.3);
-            border-top: 3px solid white;
-            border-radius: 50%;
-            width: 1.25rem;
-            height: 1.25rem;
-            animation: spin 1s linear infinite;
-        }
-        .modal-spinner {
-            border: 4px solid #e0e7ff;
-            border-top: 4px solid #4f46e5;
-            border-radius: 50%;
-            width: 3rem;
-            height: 3rem;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        /* Popup de mensajes */
-        #message-popup {
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 3000;
-            padding: 12px 20px;
-            border-radius: 50px;
-            font-size: 14px;
-            font-weight: 600;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        /* Textarea auto-resize */
-        textarea.auto-resize {
-            min-height: 2.5rem;
-            overflow: hidden;
-            resize: none;
-            line-height: 1.5;
-            padding-top: 0.5rem;
-            padding-bottom: 0.5rem;
-        }
-
-        /* Modal Overlay */
-        .modal-overlay {
-            background-color: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(4px);
-        }
-
-        /* Plan Cards */
-        .plan-card {
-            transition: all 0.2s ease;
-            cursor: pointer;
-            border: 2px solid #e2e8f0;
-        }
-        .plan-card:hover { border-color: #4f46e5; background-color: #eef2ff; transform: translateY(-2px); shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
-        .plan-card:active { transform: translateY(0); }
-
-        /* --- ESTILOS DE LANDING PAGE --- */
-        .landing-section { background-color: white; }
-        .hero-bg {
-            background: radial-gradient(circle at top right, #e0e7ff, transparent 40%),
-                        radial-gradient(circle at bottom left, #f0f9ff, transparent 40%);
-        }
-        
-        /* Gradiente sutil para secciones */
-        .bg-grid-slate {
-            background-size: 40px 40px;
-            background-image: linear-gradient(to right, #f1f5f9 1px, transparent 1px),
-                              linear-gradient(to bottom, #f1f5f9 1px, transparent 1px);
-        }
-        
-        /* Estilos tabla historial */
-        .history-item {
-            transition: all 0.2s;
-        }
-        .history-item:hover {
-            background-color: #f8fafc;
-        }
+        body { font-family: sans-serif; background: #f0f9ff; }
+        .recording { animation: pulse 1.5s infinite; background-color: #ef4444 !important; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); } 70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+        /* Ocultar scrollbar en textareas pero permitir scroll */
+        textarea::-webkit-scrollbar { width: 0px; background: transparent; }
     </style>
 </head>
-<body>
+<body class="min-h-screen flex flex-col items-center p-4">
 
-    <!-- ========================================== -->
-    <!-- 1. LANDING PAGE (Visible por defecto)      -->
-    <!-- ========================================== -->
-    <div id="landing-page" class="w-full transition-opacity duration-300">
-        
-        <!-- Navbar -->
-        <nav class="w-full px-6 py-4 flex justify-between items-center bg-white/90 backdrop-blur-md sticky top-0 z-40 border-b border-slate-100">
-            <div class="flex items-center gap-2 cursor-pointer" onclick="window.scrollTo(0,0)">
-                <div class="bg-indigo-600 text-white p-1.5 rounded-lg shadow-sm">
-                    <i data-lucide="activity" class="w-6 h-6"></i>
-                </div>
-                <span class="text-xl font-bold text-indigo-900 tracking-tight">ClinicalV</span>
-            </div>
-            <div class="flex items-center gap-6">
-                <a href="#como-funciona" class="hidden md:block text-sm font-medium text-slate-600 hover:text-indigo-600 transition">Cómo Funciona</a>
-                <a href="#seguridad" class="hidden md:block text-sm font-medium text-slate-600 hover:text-indigo-600 transition">Seguridad</a>
-                <button onclick="switchToApp()" class="px-5 py-2.5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-full transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5">
-                    Entrar a la App
-                </button>
-            </div>
-        </nav>
+    <header class="w-full max-w-md bg-white p-4 rounded-xl shadow-sm mb-4 flex justify-between items-center">
+        <div class="flex items-center gap-2 text-indigo-700 font-bold text-xl">
+            <i data-lucide="activity"></i> ClinicalV
+        </div>
+        <div class="text-xs text-slate-400 font-mono">BETA v1.0</div>
+    </header>
 
-        <!-- Hero Section -->
-        <header class="hero-bg pt-24 pb-32 px-6 text-center relative overflow-hidden">
-            <div class="absolute inset-0 bg-grid-slate opacity-50 pointer-events-none"></div>
-            <div class="max-w-4xl mx-auto relative z-10">
-                <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-50 text-indigo-700 text-sm font-medium mb-8 border border-indigo-100 shadow-sm">
-                    <span class="relative flex h-2.5 w-2.5">
-                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
-                      <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-indigo-500"></span>
-                    </span>
-                    Nueva Versión 2.0 con IA Generativa
-                </div>
-                <h1 class="text-5xl md:text-7xl font-extrabold text-slate-900 leading-tight mb-8 tracking-tight">
-                    Tu Consulta Médica, <br/>
-                    <span class="text-indigo-600">Automatizada.</span>
-                </h1>
-                <p class="text-lg md:text-xl text-slate-600 mb-10 max-w-2xl mx-auto leading-relaxed">
-                    ClinicalV escucha tu consulta, transcribe el diagnóstico y genera recetas digitales estructuradas y recomendaciones claras para tus pacientes en segundos.
-                </p>
-                <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                    <button onclick="switchToApp()" class="px-8 py-4 bg-indigo-600 text-white rounded-xl font-bold text-lg hover:bg-indigo-700 transition shadow-xl hover:shadow-indigo-500/30 flex items-center justify-center gap-2 w-full sm:w-auto">
-                        Comenzar Gratis
-                        <i data-lucide="arrow-right" class="w-5 h-5"></i>
-                    </button>
-                    <div class="text-sm text-slate-500 mt-2 sm:mt-0 sm:ml-4">
-                        <span class="block text-xs font-semibold uppercase tracking-wider text-slate-400">Usado por</span>
-                        <div class="flex -space-x-2 mt-1 justify-center sm:justify-start">
-                            <div class="w-8 h-8 rounded-full bg-slate-200 border-2 border-white flex items-center justify-center text-xs font-bold text-slate-600">DR</div>
-                            <div class="w-8 h-8 rounded-full bg-slate-300 border-2 border-white flex items-center justify-center text-xs font-bold text-slate-600">MD</div>
-                            <div class="w-8 h-8 rounded-full bg-slate-200 border-2 border-white flex items-center justify-center text-xs font-bold text-slate-600 text-[8px]">+500</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </header>
-
-        <!-- Features Grid -->
-        <section class="py-24 px-6 bg-white relative z-20 -mt-10 rounded-t-[40px] shadow-[0_-10px_40px_rgba(0,0,0,0.03)]">
-            <div class="max-w-6xl mx-auto">
-                <div class="text-center mb-16">
-                    <h2 class="text-sm font-bold text-indigo-600 tracking-widest uppercase mb-2">Características</h2>
-                    <h3 class="text-3xl md:text-4xl font-bold text-slate-900">Todo lo que necesitas para optimizar tu tiempo</h3>
-                </div>
-                
-                <div class="grid md:grid-cols-3 gap-8">
-                    <div class="p-8 rounded-2xl bg-slate-50 border border-slate-100 hover:border-indigo-200 hover:shadow-lg transition-all group">
-                        <div class="w-14 h-14 bg-white shadow-sm text-blue-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition border border-slate-100">
-                            <i data-lucide="mic" class="w-7 h-7"></i>
-                        </div>
-                        <h3 class="text-xl font-bold text-slate-900 mb-3">Dictado Clínico Inteligente</h3>
-                        <p class="text-slate-600 leading-relaxed">Olvídate de escribir. Dicta la anamnesis, los hallazgos y el plan. Nuestra IA entiende terminología médica y transcribe todo en tiempo real.</p>
-                    </div>
-                    <div class="p-8 rounded-2xl bg-slate-50 border border-slate-100 hover:border-indigo-200 hover:shadow-lg transition-all group">
-                        <div class="w-14 h-14 bg-white shadow-sm text-indigo-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition border border-slate-100">
-                            <i data-lucide="sparkles" class="w-7 h-7"></i>
-                        </div>
-                        <h3 class="text-xl font-bold text-slate-900 mb-3">Estructuración con IA</h3>
-                        <p class="text-slate-600 leading-relaxed">Gemini IA organiza la información desordenada en campos estructurados: Diagnóstico, Plan, Medicamentos y Recomendaciones claras.</p>
-                    </div>
-                    <div class="p-8 rounded-2xl bg-slate-50 border border-slate-100 hover:border-indigo-200 hover:shadow-lg transition-all group">
-                        <div class="w-14 h-14 bg-white shadow-sm text-green-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition border border-slate-100">
-                            <i data-lucide="send" class="w-7 h-7"></i>
-                        </div>
-                        <h3 class="text-xl font-bold text-slate-900 mb-3">Receta Digital Instantánea</h3>
-                        <p class="text-slate-600 leading-relaxed">Envía la receta y las indicaciones directamente al WhatsApp o correo del paciente con un solo clic. Profesional y rápido.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Cómo Funciona (Step by Step) -->
-        <section id="como-funciona" class="py-24 px-6 bg-slate-900 text-white overflow-hidden">
-            <div class="max-w-6xl mx-auto">
-                <div class="text-center mb-16">
-                    <h2 class="text-sm font-bold text-indigo-400 tracking-widest uppercase mb-2">Flujo de Trabajo</h2>
-                    <h3 class="text-3xl md:text-4xl font-bold">Tan simple como hablar</h3>
-                </div>
-
-                <div class="grid md:grid-cols-3 gap-12 relative">
-                    <div class="hidden md:block absolute top-12 left-[16%] right-[16%] h-0.5 bg-slate-700 z-0"></div>
-                    <div class="relative z-10 text-center">
-                        <div class="w-24 h-24 mx-auto bg-slate-800 border-4 border-slate-900 rounded-full flex items-center justify-center mb-6 shadow-xl relative">
-                            <span class="absolute -top-2 -right-2 w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center font-bold text-sm border-2 border-slate-900">1</span>
-                            <i data-lucide="mic" class="w-10 h-10 text-indigo-400"></i>
-                        </div>
-                        <h4 class="text-xl font-bold mb-2">Inicia Consulta</h4>
-                        <p class="text-slate-400">Presiona el botón y comienza a hablar con tu paciente o dicta tus notas.</p>
-                    </div>
-                    <div class="relative z-10 text-center">
-                        <div class="w-24 h-24 mx-auto bg-slate-800 border-4 border-slate-900 rounded-full flex items-center justify-center mb-6 shadow-xl relative">
-                            <span class="absolute -top-2 -right-2 w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center font-bold text-sm border-2 border-slate-900">2</span>
-                            <i data-lucide="cpu" class="w-10 h-10 text-indigo-400"></i>
-                        </div>
-                        <h4 class="text-xl font-bold mb-2">La IA Procesa</h4>
-                        <p class="text-slate-400">Nuestro motor extrae los datos clínicos relevantes y descarta el ruido.</p>
-                    </div>
-                    <div class="relative z-10 text-center">
-                        <div class="w-24 h-24 mx-auto bg-slate-800 border-4 border-slate-900 rounded-full flex items-center justify-center mb-6 shadow-xl relative">
-                            <span class="absolute -top-2 -right-2 w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center font-bold text-sm border-2 border-slate-900">3</span>
-                            <i data-lucide="file-check" class="w-10 h-10 text-indigo-400"></i>
-                        </div>
-                        <h4 class="text-xl font-bold mb-2">Revisa y Envía</h4>
-                        <p class="text-slate-400">Obtén un resumen perfecto, edita si es necesario y envía la receta.</p>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- CTA Final -->
-        <section class="py-24 px-6 bg-indigo-600 text-white text-center">
-            <div class="max-w-3xl mx-auto">
-                <h2 class="text-3xl md:text-5xl font-bold mb-6">¿Listo para modernizar tu consulta?</h2>
-                <p class="text-indigo-100 text-lg mb-10">Únete a cientos de médicos que ya están ahorrando horas de trabajo administrativo cada semana.</p>
-                <button onclick="switchToApp()" class="px-10 py-5 bg-white text-indigo-600 rounded-xl font-bold text-lg hover:bg-indigo-50 transition shadow-xl hover:shadow-2xl hover:-translate-y-1">
-                    Crear Cuenta Gratis
-                </button>
-                <p class="mt-4 text-xs text-indigo-300 opacity-70">No requiere tarjeta de crédito • Cancelación en cualquier momento</p>
-            </div>
-        </section>
-
-        <!-- Footer -->
-        <footer class="bg-slate-900 text-slate-400 py-12 px-6 border-t border-slate-800">
-            <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-                <div class="flex items-center gap-2">
-                    <i data-lucide="activity" class="w-6 h-6 text-indigo-500"></i>
-                    <span class="text-white font-bold text-xl">ClinicalV</span>
-                </div>
-                <div class="flex gap-8 text-sm">
-                    <a href="#" class="hover:text-white transition">Términos</a>
-                    <a href="#" class="hover:text-white transition">Privacidad</a>
-                    <a href="#" class="hover:text-white transition">Contacto</a>
-                </div>
-                <p class="text-sm opacity-50">© 2025 ClinicalV Project.</p>
-            </div>
-        </footer>
+    <div id="loader" class="fixed inset-0 bg-slate-900/90 z-50 hidden flex flex-col items-center justify-center text-white">
+        <div class="w-12 h-12 border-4 border-white border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p id="loader-text" class="font-bold text-lg">Procesando...</p>
     </div>
 
+    <main class="w-full max-w-md space-y-4">
 
-    <!-- ========================================== -->
-    <!-- 2. APLICACIÓN (Oculta por defecto)         -->
-    <!-- ========================================== -->
-    <div id="app-interface" class="app-wrapper hidden">
-        <button onclick="showLanding()" class="fixed top-5 left-5 p-2 text-indigo-800 bg-white rounded-full shadow-sm hover:shadow-md z-50 transition-transform hover:scale-105" title="Volver al inicio">
-            <i data-lucide="arrow-left" class="w-5 h-5"></i>
-        </button>
-
-        <!-- Saldo y Logout -->
-        <div class="fixed top-5 right-5 flex items-center gap-3 z-50">
-            <div id="credits-badge" class="hidden bg-white px-3 py-1.5 rounded-full shadow-sm border border-slate-200 text-xs font-bold text-indigo-600 flex items-center gap-1 cursor-pointer hover:bg-indigo-50 transition" onclick="openPaymentModal()">
-                <i data-lucide="coins" class="w-3 h-3"></i>
-                <span id="credits-count">--</span> Consultas
-                <span class="bg-indigo-100 text-indigo-700 px-1.5 rounded-md ml-1 text-[10px]">+</span>
-            </div>
+        <div id="section-record" class="bg-white p-8 rounded-2xl shadow-lg text-center">
+            <h2 class="text-slate-700 font-bold mb-2">Dictar Consulta</h2>
+            <p class="text-slate-400 text-sm mb-8">Presiona para comenzar a hablar</p>
             
-            <button id="logout-button" onclick="logout()" class="p-2 text-slate-600 bg-white rounded-full hover:bg-slate-100 transition shadow-sm hidden hover:scale-105">
-                <i data-lucide="log-out" class="w-4 h-4"></i>
+            <button id="btn-record" onclick="toggleRecord()" class="w-24 h-24 bg-indigo-600 rounded-full flex items-center justify-center text-white shadow-xl mx-auto transition-transform hover:scale-105 active:scale-95">
+                <i data-lucide="mic" class="w-10 h-10"></i>
             </button>
-        </div>
-
-        <div class="app-card">
-            <div class="flex justify-center mb-6">
-                <div class="bg-indigo-50 p-3 rounded-full">
-                    <i data-lucide="activity" class="w-8 h-8 text-indigo-600"></i>
-                </div>
-            </div>
-            <h1 class="text-2xl font-bold text-center text-slate-900 mb-6">Panel Médico</h1>
-
-            <!-- AUTH -->
-            <div id="auth-section">
-                <!-- LOGIN -->
-                <div id="login-form">
-                    <div class="space-y-4">
-                        <input type="email" id="login-email" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none transition focus:ring-2 focus:ring-indigo-500" placeholder="Correo Electrónico">
-                        <input type="password" id="login-password" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none transition focus:ring-2 focus:ring-indigo-500" placeholder="Contraseña">
-                        <button onclick="login()" class="w-full py-3.5 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition shadow-lg hover:shadow-indigo-500/30">Iniciar Sesión</button>
-                    </div>
-                    <div class="mt-6 text-center">
-                        <p class="text-sm text-slate-500">¿No tienes cuenta? <button onclick="showSignupForm()" class="text-indigo-600 font-bold hover:underline">Regístrate gratis</button></p>
-                    </div>
-                </div>
-
-                <!-- SIGNUP -->
-                <div id="signup-form" class="hidden space-y-3">
-                    <div class="grid grid-cols-2 gap-3">
-                        <input type="text" id="full_name" placeholder="Nombre completo" class="col-span-2 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-                        <input type="email" id="signup-email" placeholder="Email" class="col-span-2 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-                        <input type="password" id="signup-password" placeholder="Pass (min 6)" class="col-span-2 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-                        <input type="text" id="specialty" placeholder="Especialidad" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-                        <input type="text" id="subspecialty" placeholder="Subespecialidad" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-                        <input type="text" id="license_id" placeholder="Cédula" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-                        <input type="text" id="mpps" placeholder="MPPS" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-                        <input type="text" id="telefono" placeholder="Teléfono" class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-                        <input type="text" id="ubicacion" placeholder="Ubicación" class="col-span-2 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-                    </div>
-                    <button onclick="signupAndRegister()" class="w-full mt-4 py-3 bg-green-600 text-white font-bold rounded-xl hover:bg-green-700 transition shadow-lg hover:shadow-green-500/30">Crear Cuenta</button>
-                    <p class="text-center text-xs text-slate-500 mt-3"><button onclick="showLoginForm()" class="text-indigo-600 font-bold hover:underline">Volver al login</button></p>
-                </div>
-            </div>
-
-            <!-- DASHBOARD -->
-            <div id="consultation-section" class="hidden">
-                <div class="bg-indigo-50 border border-indigo-100 p-4 rounded-xl mb-6 flex items-center gap-4">
-                    <div class="bg-indigo-200 p-2 rounded-full text-indigo-700"><i data-lucide="user-round" class="w-6 h-6"></i></div>
-                    <div>
-                        <strong id="display-name" class="block text-slate-900 font-semibold"></strong>
-                        <span id="display-specialty" class="block text-xs text-indigo-600 uppercase font-bold tracking-wider"></span>
-                    </div>
-                </div>
-                
-                <div class="space-y-4">
-                    <button id="consultation-button" onclick="handleConsultationButton()" class="w-full py-4 bg-indigo-600 text-white font-bold text-lg rounded-2xl hover:bg-indigo-700 transition shadow-lg hover:shadow-indigo-500/30 flex items-center justify-center gap-3">
-                        <i data-lucide="mic" class="w-6 h-6"></i><span id="button-text">Comenzar Consulta</span>
-                    </button>
-                    
-                    <!-- Boton de Historial -->
-                    <button onclick="toggleHistory()" class="w-full py-3 bg-white text-indigo-600 border border-indigo-200 font-bold text-md rounded-2xl hover:bg-indigo-50 transition flex items-center justify-center gap-3">
-                        <i data-lucide="history" class="w-5 h-5"></i><span>Historial de Pacientes</span>
-                    </button>
-                    
-                    <p class="text-xs text-center text-slate-400 mt-2">Presiona para grabar audio y generar el resumen</p>
-                </div>
-            </div>
-
-            <!-- HISTORIAL SECTION (NUEVO) -->
-            <div id="history-section" class="hidden">
-                <div class="flex items-center justify-between mb-4 pb-4 border-b border-slate-100">
-                    <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
-                        <i data-lucide="history" class="w-5 h-5 text-indigo-600"></i>
-                        Historial Médico
-                    </h2>
-                    <button onclick="toggleHistory()" class="text-slate-400 hover:text-slate-600 bg-slate-100 p-1.5 rounded-full transition">
-                        <i data-lucide="x" class="w-4 h-4"></i>
-                    </button>
-                </div>
-
-                <!-- Buscador + Filtro Fecha -->
-                <div class="flex gap-2 mb-6">
-                    <div class="relative flex-1">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <i data-lucide="search" class="w-4 h-4 text-slate-400"></i>
-                        </div>
-                        <input type="text" id="history-search-input" oninput="debounceFetchHistory()" class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Nombre o Cédula...">
-                    </div>
-                    
-                    <div class="relative w-1/3">
-                        <input type="date" id="history-date-filter" onchange="fetchHistory()" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-indigo-500 outline-none text-slate-600">
-                    </div>
-                </div>
-
-                <!-- Lista de Resultados -->
-                <div id="history-list-container" class="space-y-3 max-h-[400px] overflow-y-auto pr-1">
-                    <div class="text-center py-8 text-slate-400 text-sm">Cargando historial...</div>
-                </div>
-            </div>
-
-            <!-- RESUMEN -->
-            <div id="summary-section" class="hidden">
-                <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-lg font-bold text-slate-900 flex items-center gap-2">
-                        <i data-lucide="file-check" class="w-5 h-5 text-indigo-600"></i>
-                        Resumen Editable
-                    </h2>
-                    <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded border border-green-200 font-medium flex items-center gap-1">
-                        <i data-lucide="sparkles" class="w-3 h-3"></i> IA Completada
-                    </span>
-                </div>
-                
-                <div class="space-y-4 mb-6">
-                    <p class="text-xs text-slate-400 italic mb-2">Edita los campos manualmente o usa el micrófono individual.</p>
-
-                    <!-- Campos -->
-                    <div>
-                        <label class="flex justify-between items-center text-xs font-bold text-slate-500 mb-1">
-                            NOMBRE PACIENTE
-                            <button onclick="startDictation('nombre-paciente')" class="text-indigo-600 hover:bg-indigo-50 rounded p-1 transition-colors" title="Dictar campo">
-                                <i data-lucide="mic" class="w-3.5 h-3.5"></i>
-                            </button>
-                        </label>
-                        <input type="text" id="nombre-paciente" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
-                    </div>
-
-                    <!-- Fila Cédula y Edad -->
-                    <div class="grid grid-cols-2 gap-3">
-                        <div>
-                            <label class="flex justify-between items-center text-xs font-bold text-slate-500 mb-1">
-                                CÉDULA
-                                <button onclick="startDictation('cedula-paciente')" class="text-indigo-600 hover:bg-indigo-50 rounded p-1 transition-colors">
-                                    <i data-lucide="mic" class="w-3.5 h-3.5"></i>
-                                </button>
-                            </label>
-                            <input type="text" id="cedula-paciente" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-                        </div>
-                        <div>
-                            <label class="flex justify-between items-center text-xs font-bold text-slate-500 mb-1">
-                                EDAD
-                                <button onclick="startDictation('edad-paciente')" class="text-indigo-600 hover:bg-indigo-50 rounded p-1 transition-colors">
-                                    <i data-lucide="mic" class="w-3.5 h-3.5"></i>
-                                </button>
-                            </label>
-                            <input type="text" id="edad-paciente" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-                        </div>
-                    </div>
-
-                    <!-- Dirección -->
-                    <div>
-                        <label class="flex justify-between items-center text-xs font-bold text-slate-500 mb-1">
-                            DIRECCIÓN
-                            <button onclick="startDictation('direccion-paciente')" class="text-indigo-600 hover:bg-indigo-50 rounded p-1 transition-colors">
-                                <i data-lucide="mic" class="w-3.5 h-3.5"></i>
-                            </button>
-                        </label>
-                        <input type="text" id="direccion-paciente" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-                    </div>
-
-                    <!-- Teléfono -->
-                    <div>
-                        <label class="flex justify-between items-center text-xs font-bold text-slate-500 mb-1">
-                            TELÉFONO
-                            <button onclick="startDictation('phone-number')" class="text-indigo-600 hover:bg-indigo-50 rounded p-1 transition-colors">
-                                <i data-lucide="mic" class="w-3.5 h-3.5"></i>
-                            </button>
-                        </label>
-                        <input type="tel" id="phone-number" placeholder="04141234567" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none">
-                    </div>
-
-                    <!-- Motivo -->
-                    <div>
-                        <label class="flex justify-between items-center text-xs font-bold text-slate-500 mb-1">
-                            MOTIVO DE CONSULTA
-                            <button onclick="startDictation('motivo')" class="text-indigo-600 hover:bg-indigo-50 rounded p-1 transition-colors">
-                                <i data-lucide="mic" class="w-3.5 h-3.5"></i>
-                            </button>
-                        </label>
-                        <textarea id="motivo" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none auto-resize"></textarea>
-                    </div>
-
-                    <!-- Diagnóstico -->
-                    <div>
-                        <label class="flex justify-between items-center text-xs font-bold text-slate-500 mb-1">
-                            DIAGNÓSTICO
-                            <button onclick="startDictation('diagnostico')" class="text-indigo-600 hover:bg-indigo-50 rounded p-1 transition-colors">
-                                <i data-lucide="mic" class="w-3.5 h-3.5"></i>
-                            </button>
-                        </label>
-                        <textarea id="diagnostico" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none auto-resize"></textarea>
-                    </div>
-
-                    <!-- Plan -->
-                    <div>
-                        <label class="flex justify-between items-center text-xs font-bold text-slate-500 mb-1">
-                            PLAN TERAPÉUTICO
-                            <button onclick="startDictation('plan')" class="text-indigo-600 hover:bg-indigo-50 rounded p-1 transition-colors">
-                                <i data-lucide="mic" class="w-3.5 h-3.5"></i>
-                            </button>
-                        </label>
-                        <textarea id="plan" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none auto-resize"></textarea>
-                    </div>
-
-                    <!-- Recomendaciones -->
-                    <div>
-                        <label class="flex justify-between items-center text-xs font-bold text-slate-500 mb-1">
-                            RECOMENDACIONES
-                            <button onclick="startDictation('recomendaciones')" class="text-indigo-600 hover:bg-indigo-50 rounded p-1 transition-colors">
-                                <i data-lucide="mic" class="w-3.5 h-3.5"></i>
-                            </button>
-                        </label>
-                        <textarea id="recomendaciones" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 outline-none auto-resize"></textarea>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-2 gap-3 pt-2 border-t border-slate-100">
-                    <button onclick="goToConsultationSection()" class="py-3 px-4 bg-slate-100 rounded-xl hover:bg-slate-200 transition text-sm font-semibold text-slate-600">Nueva Consulta</button>
-                    <button onclick="sendToWebhook()" class="py-3 px-4 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition shadow-lg hover:shadow-indigo-500/30 flex items-center justify-center gap-2 text-sm">
-                        <i data-lucide="send" class="w-4 h-4"></i>
-                        Enviar Receta
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- ========================================== -->
-    <!-- 3. MODAL DE PAGO                           -->
-    <!-- ========================================== -->
-    <div id="payment-modal" class="fixed inset-0 modal-overlay z-[2000] hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden transform scale-95 transition-all duration-300">
-            <!-- Header Común -->
-            <div class="bg-slate-900 p-4 flex justify-between items-center text-white">
-                <div class="flex items-center gap-2">
-                    <i data-lucide="coins" class="w-5 h-5 text-yellow-400"></i>
-                    <span class="font-bold">Recargar Saldo</span>
-                </div>
-                <button onclick="closePaymentModal()" class="hover:bg-slate-800 p-1 rounded"><i data-lucide="x" class="w-5 h-5"></i></button>
-            </div>
             
-            <div class="p-6">
-                <!-- STEP 1: SELECTOR DE PLANES -->
-                <div id="payment-step-1">
-                    <p class="text-sm text-slate-600 mb-4 text-center">Selecciona un paquete. Costo: <strong>$1/consulta</strong>.</p>
-                    
-                    <div class="grid grid-cols-2 gap-3 mb-2">
-                        <div class="plan-card p-4 rounded-xl border text-center hover:bg-indigo-50 transition-colors" onclick="selectPlan('Pack Básico', 5, 5)">
-                            <div class="text-xl font-bold text-slate-800">5</div>
-                            <div class="text-xs text-slate-500">Consultas</div>
-                            <div class="text-indigo-600 font-bold text-lg mt-1">$5</div>
-                        </div>
-                        <div class="plan-card p-4 rounded-xl border text-center hover:bg-indigo-50 transition-colors" onclick="selectPlan('Pack Estándar', 20, 20)">
-                            <div class="text-xl font-bold text-slate-800">20</div>
-                            <div class="text-xs text-slate-500">Consultas</div>
-                            <div class="text-indigo-600 font-bold text-lg mt-1">$20</div>
-                        </div>
-                        <div class="plan-card p-4 rounded-xl border text-center hover:bg-indigo-50 transition-colors" onclick="selectPlan('Pack Pro', 50, 50)">
-                            <div class="text-xl font-bold text-slate-800">50</div>
-                            <div class="text-xs text-slate-500">Consultas</div>
-                            <div class="text-indigo-600 font-bold text-lg mt-1">$50</div>
-                        </div>
-                        <div class="plan-card p-4 rounded-xl border border-indigo-200 bg-indigo-50/50 text-center hover:bg-indigo-100 transition-colors relative overflow-hidden" onclick="selectPlan('Pack Experto', 100, 100)">
-                            <div class="absolute top-0 right-0 bg-indigo-600 text-white text-[9px] px-2 py-0.5 rounded-bl">MEJOR</div>
-                            <div class="text-xl font-bold text-slate-800">100</div>
-                            <div class="text-xs text-slate-500">Consultas</div>
-                            <div class="text-indigo-600 font-bold text-lg mt-1">$100</div>
-                        </div>
-                    </div>
-                </div>
+            <p id="status" class="mt-6 text-indigo-600 font-medium h-6"></p>
+        </div>
 
-                <!-- STEP 2: REPORTE PAGO -->
-                <div id="payment-step-2" class="hidden">
-                    <button onclick="goToStep1()" class="text-xs text-slate-500 hover:text-indigo-600 flex items-center gap-1 mb-4">
-                        <i data-lucide="arrow-left" class="w-3 h-3"></i> Volver a planes
-                    </button>
+        <div id="section-edit" class="hidden bg-white p-6 rounded-2xl shadow-lg">
+            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <h3 class="font-bold text-slate-800">Editar Resumen</h3>
+                <button onclick="reset()" class="text-xs text-red-500 font-bold">BORRAR</button>
+            </div>
 
-                    <div class="bg-indigo-50 p-3 rounded-lg border border-indigo-100 mb-4 flex justify-between items-center">
-                        <div>
-                            <p class="text-xs text-indigo-600 font-bold uppercase">Plan Seleccionado</p>
-                            <p class="font-bold text-slate-800 text-sm" id="summary-plan-name">--</p>
-                        </div>
-                        <div class="text-right">
-                            <p class="text-xl font-bold text-indigo-700" id="summary-amount-usd">--</p>
-                        </div>
-                    </div>
+            <div class="grid grid-cols-2 gap-3 mb-4">
+                <input type="text" id="nombre" placeholder="Nombre Paciente" class="col-span-2 w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 font-bold">
+                <input type="tel" id="telefono" placeholder="WhatsApp (Ej: 0414...)" class="col-span-2 w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
 
-                    <!-- Datos Bancarios -->
-                    <div class="text-sm text-slate-600 mb-4 border-b border-slate-100 pb-4">
-                        <p class="font-bold text-slate-800 mb-2">Datos Pago Móvil:</p>
-                        <div class="grid grid-cols-2 gap-1">
-                            <span>Banco:</span> <span class="font-mono font-bold">Banesco (0134)</span>
-                            <span>Teléfono:</span> <span class="font-mono font-bold">0414-1234567</span>
-                            <span>C.I/RIF:</span> <span class="font-mono font-bold">V-12345678</span>
-                        </div>
-                        <div class="mt-3 flex justify-between items-center bg-slate-100 p-2 rounded">
-                            <span class="text-xs">Monto a pagar (Bs):</span>
-                            <span id="amount-bs-display" class="font-bold text-slate-900">Calculando...</span>
-                        </div>
-                    </div>
+            <div class="space-y-3">
+                <textarea id="txt-diag" placeholder="Diagnóstico..." class="w-full bg-slate-50 border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 min-h-[60px]"></textarea>
+                <textarea id="txt-plan" placeholder="Plan / Tratamiento..." class="w-full bg-slate-50 border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 min-h-[80px]"></textarea>
+                <textarea id="txt-ind" placeholder="Indicaciones..." class="w-full bg-slate-50 border rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 min-h-[60px]"></textarea>
+            </div>
 
-                    <!-- Formulario -->
-                    <div class="space-y-3">
-                        <input type="hidden" id="selected-plan-id">
-                        <input type="hidden" id="selected-plan-amount">
-                        <input type="hidden" id="selected-plan-credits">
-                        
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 mb-1">REFERENCIA (4-6 dígitos)</label>
-                            <input type="text" id="payment-ref" class="w-full px-3 py-2.5 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 bg-slate-50" placeholder="Ej: 123456">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-500 mb-1">FECHA</label>
-                            <input type="date" id="payment-date" class="w-full px-3 py-2.5 border rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 bg-slate-50">
-                        </div>
-                        
-                        <button onclick="submitPaymentReport()" class="w-full py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition shadow-lg mt-2">
-                            Reportar Pago
-                        </button>
-                    </div>
-                </div>
+            <div class="mt-6 space-y-3">
+                <button onclick="sendWhatsapp()" class="w-full py-4 bg-green-500 text-white font-bold rounded-xl shadow-md hover:bg-green-600 flex items-center justify-center gap-2 transition-transform active:scale-95">
+                    <i data-lucide="message-circle"></i> Enviar por WhatsApp
+                </button>
+                <button onclick="copyText()" class="w-full py-3 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 flex items-center justify-center gap-2">
+                    <i data-lucide="copy"></i> Copiar Texto
+                </button>
             </div>
         </div>
-    </div>
 
-    <!-- POPUPS & OVERLAYS -->
-    <div id="message-popup" class="hidden"></div>
-    <div id="loading-overlay" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm z-[3000] hidden flex items-center justify-center">
-        <div class="bg-white p-6 rounded-2xl shadow-2xl text-center">
-            <div class="modal-spinner mx-auto mb-4"></div>
-            <p class="text-slate-800 font-bold">Procesando...</p>
-        </div>
-    </div>
+    </main>
 
-<script>
-    lucide.createIcons();
-
-    // === CONFIG ===
-    const supabaseUrl = 'https://hlhopwhvntevmqmndthv.supabase.co';
-    const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhsaG9wd2h2bnRldm1xbW5kdGh2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg1MDU2MzQsImV4cCI6MjA3NDA4MTYzNH0.wwt2gjRokyQnUwYIApHwOS6WA_a2p-dCrLQ75MJOU64';
-    const supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
-    const PRESCRIPTION_WEBHOOK = 'https://general-empresas-n8n.w06teu.easypanel.host/webhook/71e25925-1e49-43d0-830c-2451b0bf999f';
-    const DOLLAR_RATE_WEBHOOK = 'https://general-empresas-n8n.w06teu.easypanel.host/webhook/c4a705ae-2eb6-4840-aa2c-c8362573baea';
-    const N8N_PROCESS_WEBHOOK = 'https://general-empresas-n8n.w06teu.easypanel.host/webhook/24d6b820-8227-4167-a747-f6be56cd7c34'; 
-
-    let currentUser = null;
-    let currentDoctor = null;
-    let consultationState = 'idle';
-    let mediaRecorder, audioChunks = [], audioMimeType = '';
-    let activeStream = null;
-    let currentExchangeRate = 0; 
-    let historyTimeout = null;
-
-    const landingPage = document.getElementById('landing-page');
-    const appInterface = document.getElementById('app-interface');
-    const consultationSection = document.getElementById('consultation-section');
-    const summarySection = document.getElementById('summary-section');
-    const historySection = document.getElementById('history-section');
-    const messagePopup = document.getElementById('message-popup');
-    const consultationButton = document.getElementById('consultation-button');
-    const paymentModal = document.getElementById('payment-modal');
-
-    function switchToApp() { 
-        landingPage.classList.add('hidden'); 
-        appInterface.classList.remove('hidden'); 
-        window.scrollTo(0,0);
-    }
-    
-    function showLanding() { 
-        appInterface.classList.add('hidden'); 
-        landingPage.classList.remove('hidden'); 
-        window.scrollTo(0,0);
-    }
-    
-    function showMessage(msg, isError = false) {
-        messagePopup.innerHTML = isError ? 
-            `<i data-lucide="alert-circle" class="w-5 h-5"></i> <span>${msg}</span>` : 
-            `<i data-lucide="check-circle" class="w-5 h-5"></i> <span>${msg}</span>`;
-        messagePopup.className = isError ? 'bg-red-500 text-white shadow-red-200' : 'bg-green-500 text-white shadow-green-200';
-        messagePopup.style.display = 'flex';
-        lucide.createIcons();
-        setTimeout(() => messagePopup.style.display = 'none', 4000);
-    }
-
-    function showLoading() { document.getElementById('loading-overlay').classList.remove('hidden'); }
-    function hideLoading() { document.getElementById('loading-overlay').classList.add('hidden'); }
-
-    // === UTILS ===
-    function decodeHtmlEntities(text) {
-        const txt = document.createElement('textarea');
-        txt.innerHTML = text;
-        return txt.value;
-    }
-
-    function autoResizeTextarea(textarea) {
-        textarea.style.height = 'auto';
-        textarea.style.height = Math.max(textarea.scrollHeight, 40) + 'px';
-    }
-
-    // === AUTH ===
-    async function login() {
-        const email = document.getElementById('login-email').value;
-        const password = document.getElementById('login-password').value;
-        if(!email || !password) return showMessage("Faltan datos", true);
-        showLoading();
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        hideLoading();
-        if(error) return showMessage(error.message, true);
-        currentUser = data.user;
-        fetchDoctorProfile(currentUser.id);
-    }
-
-    async function signupAndRegister() {
-        const email = document.getElementById('signup-email').value;
-        const password = document.getElementById('signup-password').value;
-        const full_name = document.getElementById('full_name').value.trim();
-        const specialty = document.getElementById('specialty').value.trim();
-        const subspecialty = document.getElementById('subspecialty').value.trim();
-        const license_id = document.getElementById('license_id').value.trim();
-        const mpps = document.getElementById('mpps').value.trim();
-        const telefono = document.getElementById('telefono').value.trim();
-        const ubicacion = document.getElementById('ubicacion').value.trim();
-
-        if (!email || password.length < 6) return showMessage('Email y pass (min 6) requeridos', true);
-        if (!full_name) return showMessage('Falta nombre completo', true);
-
-        showLoading();
-        try {
-            const { data, error } = await supabase.auth.signUp({ email, password });
-            if (error) throw error;
-            currentUser = data.user;
-
-            const doctorData = { 
-                id: currentUser.id, full_name, specialty, subspecialty, 
-                license_id, mpps, telefono, ubicacion, email,
-                credits: 3 // Inicializamos con 3 créditos
-            };
-            
-            const { error: insertError } = await supabase.from('doctors').insert([doctorData]);
-            if (insertError) throw insertError;
-
-            fetchDoctorProfile(currentUser.id);
-            showMessage('✅ Bienvenido a ClinicalV', false);
-        } catch (err) {
-            showMessage('Error: ' + err.message, true);
-        } finally {
-            hideLoading();
-        }
-    }
-
-    function showSignupForm() {
-        document.getElementById('signup-form').classList.remove('hidden');
-        document.getElementById('login-form').classList.add('hidden');
-    }
-    
-    function showLoginForm() {
-        document.getElementById('login-form').classList.remove('hidden');
-        document.getElementById('signup-form').classList.add('hidden');
-    }
-
-    async function fetchDoctorProfile(uid) {
-        showLoading();
-        const { data } = await supabase.from('doctors').select('*').eq('id', uid).single();
-        hideLoading();
+    <script>
+        // --- CONFIGURACIÓN ---
+        // Pega aquí TU Webhook de n8n
+        const N8N_WEBHOOK = 'https://general-empresas-n8n.w06teu.easypanel.host/webhook/24d6b820-8227-4167-a747-f6be56cd7c34';
         
-        if(data) {
-            currentDoctor = data;
-            document.getElementById('auth-section').classList.add('hidden');
-            consultationSection.classList.remove('hidden');
-            document.getElementById('logout-button').classList.remove('hidden');
-            
-            const creditsBadge = document.getElementById('credits-badge');
-            creditsBadge.classList.remove('hidden');
-            document.getElementById('credits-count').textContent = currentDoctor.credits || 0;
-
-            document.getElementById('display-name').textContent = data.full_name;
-            document.getElementById('display-specialty').textContent = data.specialty;
-            switchToApp();
-
-            // Realtime listener
-            supabase
-                .channel('doctor-updates')
-                .on('postgres_changes', 
-                    { event: 'UPDATE', schema: 'public', table: 'doctors', filter: `id=eq.${uid}` }, 
-                    (payload) => {
-                        if (payload.new) {
-                            currentDoctor.credits = payload.new.credits;
-                            document.getElementById('credits-count').textContent = payload.new.credits;
-                            if (payload.new.credits > 0) closePaymentModal();
-                        }
-                    }
-                )
-                .subscribe();
-        }
-    }
-
-    // === HISTORY LOGIC (NUEVO) ===
-    function toggleHistory() {
-        if(historySection.classList.contains('hidden')) {
-            // Mostrar
-            consultationSection.classList.add('hidden');
-            summarySection.classList.add('hidden');
-            historySection.classList.remove('hidden');
-            fetchHistory(); // Cargar datos
-        } else {
-            // Ocultar (volver a dashboard)
-            historySection.classList.add('hidden');
-            consultationSection.classList.remove('hidden');
-        }
-    }
-
-    function debounceFetchHistory() {
-        clearTimeout(historyTimeout);
-        historyTimeout = setTimeout(() => fetchHistory(), 500);
-    }
-
-    async function fetchHistory() {
-        const queryText = document.getElementById('history-search-input').value.trim();
-        const dateFilter = document.getElementById('history-date-filter').value;
-        const container = document.getElementById('history-list-container');
-        
-        container.innerHTML = '<div class="text-center py-8 text-slate-400 text-sm"><div class="button-spinner mx-auto border-slate-400 mb-2"></div>Cargando...</div>';
-
-        try {
-            // Construir Query base
-            let query = supabase
-                .from('patients_summary')
-                .select('*');
-
-            // --- FILTRO DE MÉDICO ACTIVO ---
-            if (currentUser) { 
-                query = query.eq('doctor_id', currentUser.id); 
-            }
-
-            // Ordenar por fecha
-            query = query.order('fecha', { ascending: false }).limit(50);
-
-            // Filtro de Fecha (Rango de 00:00 a 23:59 del día seleccionado)
-            if (dateFilter) {
-                // Asumimos que la columna 'fecha' puede ser timestamp
-                // .gte = Mayor o igual al inicio del día
-                // .lte = Menor o igual al final del día
-                query = query.gte('fecha', `${dateFilter}T00:00:00`)
-                             .lte('fecha', `${dateFilter}T23:59:59`);
-            }
-
-            // Filtro de búsqueda (si el usuario escribió algo)
-            if (queryText) {
-                query = query.or(`nombre_paciente.ilike.%${queryText}%,cedula_paciente.ilike.%${queryText}%`);
-            }
-
-            const { data, error } = await query;
-
-            if (error) throw error;
-
-            container.innerHTML = '';
-            
-            if (!data || data.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center py-8 text-slate-400">
-                        <i data-lucide="search-x" class="w-8 h-8 mx-auto mb-2 opacity-50"></i>
-                        <p>No se encontraron pacientes.</p>
-                    </div>
-                `;
-                lucide.createIcons();
-                return;
-            }
-
-            data.forEach(item => {
-                const nombre = item.nombre_paciente || 'Sin Nombre';
-                const cedula = item.cedula_paciente || 'S/C';
-                const url = item.url_informe;
-                // Formatear fecha si existe
-                const fechaRaw = item.fecha ? new Date(item.fecha).toLocaleDateString() : ''; 
-                const hasUrl = url && url.length > 5;
-
-                const cardHtml = `
-                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between history-item">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-sm shrink-0">
-                                ${nombre.charAt(0).toUpperCase()}
-                            </div>
-                            <div class="min-w-0">
-                                <p class="font-bold text-slate-900 truncate pr-2">${nombre}</p>
-                                <div class="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-xs text-slate-500">
-                                    <span class="flex items-center gap-1"><i data-lucide="credit-card" class="w-3 h-3"></i> ${cedula}</span>
-                                    ${fechaRaw ? `<span class="hidden sm:inline">•</span><span class="flex items-center gap-1"><i data-lucide="calendar" class="w-3 h-3"></i> ${fechaRaw}</span>` : ''}
-                                </div>
-                            </div>
-                        </div>
-                        <div class="shrink-0">
-                            ${hasUrl ? `
-                                <a href="${url}" target="_blank" class="flex items-center gap-1.5 px-3 py-1.5 bg-indigo-50 text-indigo-700 text-xs font-bold rounded-lg hover:bg-indigo-100 transition border border-indigo-100">
-                                    <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
-                                    Ver Informe
-                                </a>
-                            ` : `
-                                <span class="px-3 py-1.5 bg-slate-50 text-slate-400 text-xs font-medium rounded-lg border border-slate-100 cursor-not-allowed">
-                                    Sin Informe
-                                </span>
-                            `}
-                        </div>
-                    </div>
-                `;
-                container.insertAdjacentHTML('beforeend', cardHtml);
-            });
+        // Inicializar iconos al cargar
+        window.onload = () => {
             lucide.createIcons();
+        };
 
-        } catch (err) {
-            console.error(err);
-            container.innerHTML = `<p class="text-center text-red-500 text-sm py-4">Error al cargar historial.</p>`;
-        }
-    }
+        // --- VARIABLES ---
+        let mediaRecorder;
+        let audioChunks = [];
+        let isRecording = false;
 
-    // === PAYMENT LOGIC (2 STEPS) ===
-    function openPaymentModal() {
-        paymentModal.classList.remove('hidden');
-        goToStep1(); // Always start at step 1
-        fetchDollarRate(); // Fetch rate early
-    }
+        // --- FUNCIONES ---
 
-    function closePaymentModal() {
-        paymentModal.classList.add('hidden');
-    }
+        async function toggleRecord() {
+            const btn = document.getElementById('btn-record');
+            const status = document.getElementById('status');
 
-    function goToStep1() {
-        document.getElementById('payment-step-1').classList.remove('hidden');
-        document.getElementById('payment-step-2').classList.add('hidden');
-    }
-
-    function selectPlan(planId, amount, credits) {
-        // Store Selection
-        document.getElementById('selected-plan-id').value = planId;
-        document.getElementById('selected-plan-amount').value = amount;
-        document.getElementById('selected-plan-credits').value = credits; // Guardamos el numero entero
-
-        // Update Summary UI for Step 2
-        document.getElementById('summary-plan-name').textContent = `${planId} (${credits} consultas)`;
-        document.getElementById('summary-amount-usd').textContent = `$${amount}`;
-        
-        // Update Bs Calculation
-        updateCalculation();
-
-        // Switch View
-        document.getElementById('payment-step-1').classList.add('hidden');
-        document.getElementById('payment-step-2').classList.remove('hidden');
-        
-        // Set default date
-        document.getElementById('payment-date').valueAsDate = new Date();
-    }
-
-    async function fetchDollarRate() {
-        // Only update UI if we are in step 2 or background, just ensure we have variable
-        try {
-            const res = await fetch(DOLLAR_RATE_WEBHOOK, { method: 'GET' }); 
-            if (!res.ok) throw new Error('Error rate');
-            const data = await res.json();
-            
-            let rateData = Array.isArray(data) ? data[0] : data;
-            let rate = 0;
-            
-            if (typeof rateData === 'number') rate = rateData;
-            else if (typeof rateData === 'object' && rateData !== null) {
-                if (rateData.tasa) rate = parseFloat(rateData.tasa);
-                else if (rateData.price) rate = parseFloat(rateData.price);
-                else if (rateData.bcv) rate = parseFloat(rateData.bcv);
-                else {
-                    const firstNumeric = Object.values(rateData).find(v => !isNaN(parseFloat(v)));
-                    if (firstNumeric) rate = parseFloat(firstNumeric);
+            if(!isRecording) {
+                // INICIAR GRABACIÓN
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    audioChunks = [];
+                    mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+                    mediaRecorder.onstop = processAudio;
+                    
+                    mediaRecorder.start();
+                    isRecording = true;
+                    
+                    btn.classList.add('recording');
+                    btn.innerHTML = '<i data-lucide="square" class="w-10 h-10 fill-current"></i>'; // Icono Stop
+                    status.textContent = "Grabando... Toca para terminar";
+                    lucide.createIcons();
+                } catch(err) {
+                    alert("Error: No se pudo acceder al micrófono.");
                 }
-            }
-            
-            if (rate > 0) {
-                currentExchangeRate = rate;
-                updateCalculation(); // Update if visible
-            }
-        } catch (err) {
-            console.error("Error tasa:", err);
-        }
-    }
-
-    function updateCalculation() {
-        const amountUSD = parseFloat(document.getElementById('selected-plan-amount').value) || 0;
-        const totalBsDisplay = document.getElementById('amount-bs-display');
-        
-        if (currentExchangeRate > 0 && amountUSD > 0) {
-            const totalBs = amountUSD * currentExchangeRate;
-            totalBsDisplay.textContent = `Bs. ${totalBs.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-        } else {
-            totalBsDisplay.textContent = "Calculando...";
-        }
-    }
-
-    async function submitPaymentReport() {
-        const planName = document.getElementById('selected-plan-id').value;
-        const amount = document.getElementById('selected-plan-amount').value;
-        const creditsCount = document.getElementById('selected-plan-credits').value; // El dato que pediste
-        const ref = document.getElementById('payment-ref').value.trim();
-        const date = document.getElementById('payment-date').value;
-
-        if (!ref || !date) {
-            return showMessage('⚠️ Completa la referencia y fecha', true);
-        }
-
-        showLoading();
-        try {
-            const { error } = await supabase.from('payment_reports').insert([{
-                doctor_id: currentUser.id,
-                plan_name: planName,
-                amount_usd: amount,
-                consultations_count: parseInt(creditsCount), // Enviamos el numero entero
-                reference_code: ref,
-                payment_date: date,
-                status: 'pending'
-            }]);
-
-            if (error) throw error;
-
-            showMessage('✅ Reporte enviado. Verificando...', false);
-            closePaymentModal();
-            
-        } catch (err) {
-            showMessage('Error al guardar: ' + err.message, true);
-        } finally {
-            hideLoading();
-        }
-    }
-
-    // === CONSULTATION LOGIC ===
-    async function handleConsultationButton() {
-        if (currentDoctor.credits <= 0) {
-            showMessage('⚠️ Saldo agotado. Por favor recarga.', true);
-            openPaymentModal();
-            return;
-        }
-
-        if(consultationState === 'idle') {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                activeStream = stream;
-                mediaRecorder = new MediaRecorder(stream);
-                audioChunks = [];
-                mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
+            } else {
+                // DETENER GRABACIÓN
+                mediaRecorder.stop();
+                isRecording = false;
                 
-                mediaRecorder.onstop = () => {
-                    if (activeStream) {
-                        activeStream.getTracks().forEach(track => track.stop());
-                        activeStream = null;
-                    }
-                    processAudio();
-                };
-
-                mediaRecorder.start();
-                consultationState = 'recording';
-                consultationButton.classList.add('recording');
-                consultationButton.innerHTML = '<i data-lucide="square" class="w-6 h-6 fill-current"></i><span>Detener Grabación</span>';
+                btn.classList.remove('recording');
+                btn.innerHTML = '<i data-lucide="mic" class="w-10 h-10"></i>';
+                status.textContent = "";
                 lucide.createIcons();
-            } catch(e) { showMessage('Permiso micrófono denegado', true); }
-        } else if (consultationState === 'recording') {
-            mediaRecorder.stop();
-            consultationState = 'processing';
-            consultationButton.classList.remove('recording');
-            consultationButton.classList.add('processing');
-            consultationButton.innerHTML = '<div class="button-spinner"></div><span>Procesando con IA...</span>';
-        }
-    }
-
-    async function processAudio() {
-        const blob = new Blob(audioChunks, { type: 'audio/webm' });
-        const reader = new FileReader();
-        reader.readAsDataURL(blob);
-        reader.onloadend = async () => {
-            const base64 = reader.result.split(',')[1];
-            try {
-                const summary = await processAudioWithN8N(base64, 'audio/webm');
-                fillSummaryFields(summary);
-            } catch(e) { 
-                console.error(e);
-                showMessage('Error procesando audio', true); 
-                resetBtn();
             }
-        };
-    }
-
-    async function processAudioWithN8N(base64Audio, mimeType) {
-        const payload = { audio: base64Audio, mimeType: mimeType };
-        const res = await fetch(N8N_PROCESS_WEBHOOK, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(payload)
-        });
-        
-        if (!res.ok) throw new Error(`Error n8n: ${res.status}`);
-        const data = await res.json();
-        return data.output || data; 
-    }
-
-    function fillSummaryFields(summary) {
-        const setVal = (id, val) => {
-            const el = document.getElementById(id);
-            if(el) {
-                el.value = decodeHtmlEntities(val || '');
-                if(el.classList.contains('auto-resize')) {
-                    setTimeout(() => autoResizeTextarea(el), 0);
-                }
-            }
-        };
-
-        const edadRaw = String(summary.edad_paciente || '').trim();
-        let telfRaw = String(summary.telefono_paciente || '').replace(/\D/g, '');
-        if (telfRaw.length > 0) {
-             if (telfRaw.startsWith('58')) telfRaw = '0' + telfRaw.substring(2);
-             else if (telfRaw.charAt(0) !== '0') telfRaw = '0' + telfRaw;
         }
 
-        setVal('nombre-paciente', summary.nombre_paciente);
-        setVal('cedula-paciente', summary.cedula_paciente);
-        setVal('edad-paciente', edadRaw); 
-        setVal('direccion-paciente', summary.direccion_paciente);
-        setVal('phone-number', telfRaw);
-        setVal('motivo', summary.motivo);
-        setVal('diagnostico', summary.diagnostico);
-        setVal('plan', summary.plan);
-        setVal('recomendaciones', summary.recomendaciones_y_precauciones);
-
-        consultationSection.classList.add('hidden');
-        summarySection.classList.remove('hidden');
-        consultationState = 'idle';
-        resetBtn();
-        showMessage('✅ Resumen generado con éxito', false);
-        lucide.createIcons();
-    }
-
-    function startDictation(fieldId) {
-        if (!('webkitSpeechRecognition' in window)) return showMessage('Navegador no compatible', true);
-        
-        const recognition = new webkitSpeechRecognition();
-        recognition.lang = 'es-ES';
-        recognition.interimResults = false;
-        
-        recognition.onstart = () => showMessage(`🎙️ Dictando en ${fieldId}...`, false);
-        
-        recognition.onresult = (event) => {
-            const txt = event.results[0][0].transcript;
-            const el = document.getElementById(fieldId);
-            el.value = txt; 
-            if(el.classList.contains('auto-resize')) autoResizeTextarea(el);
-            showMessage('✅ Texto capturado', false);
-        };
-        
-        recognition.start();
-    }
-
-    async function sendToWebhook() {
-        const phone = document.getElementById('phone-number').value.trim();
-        if (!phone || !document.getElementById('motivo').value.trim()) {
-            return showMessage('⚠️ Completa teléfono y motivo.', true);
-        }
-
-        const payload = {
-            type: 'send_prescription',
-            medico: currentDoctor,
-            paciente: {
-                nombre: document.getElementById('nombre-paciente').value,
-                cedula: document.getElementById('cedula-paciente').value,
-                edad: document.getElementById('edad-paciente').value,
-                direccion: document.getElementById('direccion-paciente').value,
-                telefono: phone
-            },
-            resumen_medico: {
-                motivo_consulta: document.getElementById('motivo').value,
-                diagnostico: document.getElementById('diagnostico').value,
-                plan: document.getElementById('plan').value,
-                recomendaciones: document.getElementById('recomendaciones').value
-            }
-        };
-
-        showMessage('Enviando receta...', false);
-        try {
-            const res = await fetch(PRESCRIPTION_WEBHOOK, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
+        async function processAudio() {
+            const loader = document.getElementById('loader');
+            loader.classList.remove('hidden');
             
-            if (res.ok) {
-                // Resta créditos en Supabase
-                const newCredits = (currentDoctor.credits || 0) - 1;
-                const newSummaryCount = (currentDoctor.resumenes || 0) + 1;
+            const blob = new Blob(audioChunks, { type: 'audio/webm' });
+            const reader = new FileReader();
+            reader.readAsDataURL(blob);
+            
+            reader.onloadend = async () => {
+                const base64 = reader.result.split(',')[1];
+                
+                try {
+                    // Enviar a n8n
+                    const res = await fetch(N8N_WEBHOOK, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ audio: base64, mimeType: 'audio/webm' })
+                    });
+                    
+                    if(!res.ok) throw new Error("Error en n8n");
+                    
+                    const data = await res.json();
+                    const output = data.output || data; // Ajustar según respuesta n8n
 
-                const { error: updateError } = await supabase
-                    .from('doctors')
-                    .update({ credits: newCredits, resumenes: newSummaryCount })
-                    .eq('id', currentUser.id);
+                    // Llenar campos
+                    document.getElementById('nombre').value = output.nombre_paciente || '';
+                    document.getElementById('telefono').value = output.telefono_paciente || '';
+                    
+                    // Llenar textareas
+                    document.getElementById('txt-diag').value = `MOTIVO: ${output.motivo || ''}\n\nDX: ${output.diagnostico || ''}`;
+                    document.getElementById('txt-plan').value = output.plan || '';
+                    document.getElementById('txt-ind').value = output.recomendaciones_y_precauciones || '';
+                    
+                    // Mostrar Editor, Ocultar Grabadora
+                    document.getElementById('section-record').classList.add('hidden');
+                    document.getElementById('section-edit').classList.remove('hidden');
+                    
+                    // Ajustar alturas
+                    resizeAllTextareas();
 
-                if (!updateError) {
-                    currentDoctor.credits = newCredits;
-                    document.getElementById('credits-count').textContent = newCredits;
+                } catch(err) {
+                    alert("Error procesando: " + err.message);
+                } finally {
+                    loader.classList.add('hidden');
                 }
-
-                showMessage('🎉 ¡Receta enviada con éxito!', false);
-                setTimeout(goToConsultationSection, 2000);
-            } else throw new Error('Error en el envío');
-        } catch (err) {
-            showMessage('❌ Error al enviar', true);
+            };
         }
-    }
 
-    function resetBtn() {
-        consultationButton.classList.remove('processing', 'recording');
-        consultationButton.innerHTML = '<i data-lucide="mic" class="w-6 h-6"></i><span id="button-text">Comenzar Consulta</span>';
-        consultationButton.disabled = false;
-        consultationState = 'idle';
-        lucide.createIcons();
-    }
+        function sendWhatsapp() {
+            const phone = document.getElementById('telefono').value.replace(/\D/g, '');
+            const nombre = document.getElementById('nombre').value;
+            
+            if(!phone) return alert("Falta el teléfono del paciente");
+            
+            // Lógica Venezuela
+            let finalPhone = phone;
+            if(phone.length === 11 && phone.startsWith('0')) finalPhone = '58' + phone.substring(1);
+            else if(phone.length === 10) finalPhone = '58' + phone;
 
-    function goToConsultationSection() {
-        summarySection.classList.add('hidden');
-        consultationSection.classList.remove('hidden');
-        resetBtn();
-    }
+            const msg = `*RESUMEN MÉDICO* 🩺\n👤 ${nombre}\n\n🔎 *DIAGNÓSTICO:*\n${document.getElementById('txt-diag').value}\n\n💊 *TRATAMIENTO:*\n${document.getElementById('txt-plan').value}\n\n⚠️ *INDICACIONES:*\n${document.getElementById('txt-ind').value}\n\n_Enviado con ClinicalV_`;
 
-    async function logout() {
-        await supabase.auth.signOut();
-        window.location.reload();
-    }
+            window.open(`https://wa.me/${finalPhone}?text=${encodeURIComponent(msg)}`, '_blank');
+        }
+        
+        function copyText() {
+            const msg = `PACIENTE: ${document.getElementById('nombre').value}\n\n${document.getElementById('txt-diag').value}\n\nPLAN:\n${document.getElementById('txt-plan').value}`;
+            navigator.clipboard.writeText(msg).then(() => alert("Texto Copiado"));
+        }
 
-    document.addEventListener('DOMContentLoaded', async () => {
-        document.querySelectorAll('textarea.auto-resize').forEach(ta => {
-            ta.addEventListener('input', () => autoResizeTextarea(ta));
-        });
-
-        const { data: { session } } = await supabase.auth.getSession();
-        if(session) { currentUser = session.user; fetchDoctorProfile(currentUser.id); }
-    });
-</script>
+        function reset() {
+            if(confirm("¿Borrar todo y empezar de nuevo?")) {
+                document.getElementById('section-record').classList.remove('hidden');
+                document.getElementById('section-edit').classList.add('hidden');
+                document.querySelectorAll('input, textarea').forEach(el => el.value = '');
+            }
+        }
+        
+        function resizeAllTextareas() {
+            document.querySelectorAll('textarea').forEach(el => {
+                el.style.height = 'auto';
+                el.style.height = el.scrollHeight + 'px';
+            });
+        }
+    </script>
 </body>
 </html>
