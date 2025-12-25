@@ -27,7 +27,7 @@
         <div class="flex items-center gap-2 text-indigo-700 font-bold text-xl">
             <i data-lucide="activity"></i> ClinicalV
         </div>
-        <div class="text-xs text-slate-400 font-mono">BETA v1.4</div>
+        <div class="text-xs text-slate-400 font-mono">BETA v1.5</div>
     </header>
 
     <div id="loader" class="fixed inset-0 bg-slate-900/90 z-50 hidden flex flex-col items-center justify-center text-white">
@@ -189,9 +189,19 @@
                     const data = await res.json();
                     const output = data.output || data; 
 
-                    if(output.nombre_paciente) document.getElementById('nombre').value = output.nombre_paciente;
-                    if(output.telefono_paciente) document.getElementById('telefono').value = output.telefono_paciente;
+                    // --- LÓGICA DE PROTECCIÓN DE DATOS ---
+                    const campoNombre = document.getElementById('nombre');
+                    const campoTelefono = document.getElementById('telefono');
+
+                    // Solo llenamos si el campo está vacío. Si ya tiene algo, NO lo tocamos.
+                    if (output.nombre_paciente && campoNombre.value.trim() === "") {
+                        campoNombre.value = output.nombre_paciente;
+                    }
+                    if (output.telefono_paciente && campoTelefono.value.trim() === "") {
+                        campoTelefono.value = output.telefono_paciente;
+                    }
                     
+                    // Los campos de resumen sí los sobrescribimos porque ese es el objetivo del dictado
                     document.getElementById('txt-diag').value = `MOTIVO: ${output.motivo || ''}\n\nDX: ${output.diagnostico || ''}`;
                     document.getElementById('txt-plan').value = output.plan || '';
                     document.getElementById('txt-ind').value = output.recomendaciones_y_precauciones || '';
@@ -203,33 +213,23 @@
             };
         }
 
-        // --- DICTADO INDIVIDUAL (CORREGIDO) ---
+        // --- DICTADO INDIVIDUAL ---
         function dictarCampo(targetId, btnElement) {
-            // Verificar soporte
-            if (!('webkitSpeechRecognition' in window)) {
-                return alert("Tu navegador no soporta dictado. Usa Chrome.");
-            }
+            if (!('webkitSpeechRecognition' in window)) return alert("Tu navegador no soporta dictado. Usa Chrome.");
 
             const recognition = new webkitSpeechRecognition();
             recognition.lang = 'es-ES';
             recognition.interimResults = false;
             recognition.maxAlternatives = 1;
 
-            // Feedback visual
             btnElement.classList.add('mic-active'); 
-
-            recognition.onstart = () => {
-                // Opcional: Podrías poner un console.log para saber que inició
-            };
 
             recognition.onresult = (event) => {
                 const transcript = event.results[0][0].transcript;
                 const targetField = document.getElementById(targetId);
                 
                 if (targetField) {
-                    // AQUÍ ESTÁ LA MAGIA: Reemplaza todo el valor
-                    targetField.value = transcript; 
-                    // Ajustar altura si es textarea
+                    targetField.value = transcript; // MODO REEMPLAZO
                     if(targetField.tagName === 'TEXTAREA') {
                         targetField.style.height = 'auto';
                         targetField.style.height = targetField.scrollHeight + 'px';
@@ -240,15 +240,10 @@
             recognition.onerror = (event) => {
                 console.error("Error dictado:", event.error);
                 btnElement.classList.remove('mic-active');
-                if (event.error === 'no-speech') {
-                    alert("No se escuchó nada. Intenta de nuevo acercándote al micrófono.");
-                }
+                if (event.error === 'no-speech') alert("No se escuchó nada.");
             };
 
-            recognition.onend = () => { 
-                btnElement.classList.remove('mic-active'); 
-            };
-
+            recognition.onend = () => { btnElement.classList.remove('mic-active'); };
             recognition.start();
         }
 
