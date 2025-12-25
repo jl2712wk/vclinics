@@ -17,7 +17,7 @@
         .mic-active { color: #ef4444 !important; animation: pulse-mini 1s infinite; }
         @keyframes pulse-mini { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
-        /* Ocultar scrollbar en textareas pero permitir scroll */
+        /* Ocultar scrollbar en textareas */
         textarea::-webkit-scrollbar { width: 0px; background: transparent; }
     </style>
 </head>
@@ -27,7 +27,7 @@
         <div class="flex items-center gap-2 text-indigo-700 font-bold text-xl">
             <i data-lucide="activity"></i> ClinicalV
         </div>
-        <div class="text-xs text-slate-400 font-mono">BETA v1.2</div>
+        <div class="text-xs text-slate-400 font-mono">BETA v1.3</div>
     </header>
 
     <div id="loader" class="fixed inset-0 bg-slate-900/90 z-50 hidden flex flex-col items-center justify-center text-white">
@@ -42,14 +42,31 @@
                 <i data-lucide="user-round-cog" class="w-4 h-4"></i> Datos del Médico
             </div>
             <div class="grid grid-cols-2 gap-3">
-                <input type="text" id="doc-name" placeholder="Tu Nombre (Ej: Dr. Pérez)" class="w-full bg-white border-transparent focus:border-indigo-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 font-semibold text-slate-700 placeholder:text-slate-400 transition-all" oninput="saveProfile()">
-                <input type="text" id="doc-spec" placeholder="Especialidad (Ej: Pediatra)" class="w-full bg-white border-transparent focus:border-indigo-300 rounded-lg px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 text-slate-700 placeholder:text-slate-400 transition-all" oninput="saveProfile()">
+                <input type="text" id="doc-name" placeholder="Tu Nombre" class="w-full bg-white border-transparent rounded-lg px-3 py-2 text-sm outline-none font-semibold text-slate-700" oninput="saveProfile()">
+                <input type="text" id="doc-spec" placeholder="Especialidad" class="w-full bg-white border-transparent rounded-lg px-3 py-2 text-sm outline-none text-slate-700" oninput="saveProfile()">
+            </div>
+        </div>
+
+        <div id="section-patient" class="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+            <div class="space-y-3">
+                <div class="relative">
+                    <input type="text" id="nombre" placeholder="Nombre Paciente" class="w-full bg-slate-50 border border-slate-200 rounded-lg pl-3 pr-10 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500 font-bold">
+                    <button onclick="dictarCampo('nombre', this)" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 p-1 rounded-full transition-all">
+                        <i data-lucide="mic" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                <div class="relative">
+                    <input type="tel" id="telefono" placeholder="WhatsApp (Ej: 0414...)" class="w-full bg-slate-50 border border-slate-200 rounded-lg pl-3 pr-10 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+                    <button onclick="dictarCampo('telefono', this)" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 p-1 rounded-full transition-all">
+                        <i data-lucide="mic" class="w-5 h-5"></i>
+                    </button>
+                </div>
             </div>
         </div>
 
         <div id="section-record" class="bg-white p-8 rounded-2xl shadow-lg text-center">
-            <h2 class="text-slate-700 font-bold mb-2">Dictar Consulta Completa</h2>
-            <p class="text-slate-400 text-sm mb-8">Presiona para comenzar a hablar</p>
+            <h2 class="text-slate-700 font-bold mb-2">Dictar Consulta</h2>
+            <p class="text-slate-400 text-sm mb-6">Presiona el botón para empezar</p>
             
             <button id="btn-record" onclick="toggleRecord()" class="w-24 h-24 bg-indigo-600 rounded-full flex items-center justify-center text-white shadow-xl mx-auto transition-transform hover:scale-105 active:scale-95">
                 <i data-lucide="mic" class="w-10 h-10"></i>
@@ -60,45 +77,29 @@
 
         <div id="section-edit" class="hidden bg-white p-6 rounded-2xl shadow-lg">
             <div class="flex justify-between items-center mb-4 border-b pb-2">
-                <h3 class="font-bold text-slate-800">Editar Resumen</h3>
-                <button onclick="reset()" class="text-xs text-red-500 font-bold">BORRAR TODO</button>
+                <h3 class="font-bold text-slate-800">Resultados</h3>
+                <button onclick="reset()" class="text-xs text-red-500 font-bold">NUEVA CONSULTA</button>
             </div>
-            <p class="text-xs text-slate-400 mb-4 flex items-center gap-1"><i data-lucide="info" class="w-3 h-3"></i> Toca los micrófonos pequeños para corregir campos individuales.</p>
-
-            <div class="space-y-3 mb-4">
-                <div class="relative">
-                    <input type="text" id="nombre" placeholder="Nombre Paciente" class="w-full bg-slate-50 border border-slate-200 rounded-lg pl-3 pr-10 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 font-bold">
-                    <button onclick="dictarCampo('nombre', this)" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 p-1 rounded-full transition-all">
-                        <i data-lucide="mic" class="w-5 h-5"></i>
-                    </button>
-                </div>
-                 <div class="relative">
-                    <input type="tel" id="telefono" placeholder="WhatsApp (Ej: 0414...)" class="w-full bg-slate-50 border border-slate-200 rounded-lg pl-3 pr-10 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
-                     <button onclick="dictarCampo('telefono', this)" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 p-1 rounded-full transition-all">
-                        <i data-lucide="mic" class="w-5 h-5"></i>
-                    </button>
-                </div>
-            </div>
-
+            
             <div class="space-y-4">
                 <div class="relative">
                     <label class="text-xs font-bold text-slate-400 mb-1 block">Diagnóstico</label>
                     <textarea id="txt-diag" class="w-full bg-slate-50 border rounded-lg pl-3 pr-10 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 min-h-[60px]"></textarea>
-                     <button onclick="dictarCampo('txt-diag', this)" class="absolute right-2 top-8 text-slate-400 hover:text-indigo-600 p-1 rounded-full transition-all">
+                     <button onclick="dictarCampo('txt-diag', this)" class="absolute right-2 top-8 text-slate-400 hover:text-indigo-600 p-1 rounded-full">
                         <i data-lucide="mic" class="w-5 h-5"></i>
                     </button>
                 </div>
                 <div class="relative">
                      <label class="text-xs font-bold text-slate-400 mb-1 block">Plan / Tratamiento</label>
                     <textarea id="txt-plan" class="w-full bg-slate-50 border rounded-lg pl-3 pr-10 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 min-h-[80px]"></textarea>
-                     <button onclick="dictarCampo('txt-plan', this)" class="absolute right-2 top-8 text-slate-400 hover:text-indigo-600 p-1 rounded-full transition-all">
+                     <button onclick="dictarCampo('txt-plan', this)" class="absolute right-2 top-8 text-slate-400 hover:text-indigo-600 p-1 rounded-full">
                         <i data-lucide="mic" class="w-5 h-5"></i>
                     </button>
                 </div>
                 <div class="relative">
                      <label class="text-xs font-bold text-slate-400 mb-1 block">Indicaciones</label>
                     <textarea id="txt-ind" class="w-full bg-slate-50 border rounded-lg pl-3 pr-10 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 min-h-[60px]"></textarea>
-                     <button onclick="dictarCampo('txt-ind', this)" class="absolute right-2 top-8 text-slate-400 hover:text-indigo-600 p-1 rounded-full transition-all">
+                     <button onclick="dictarCampo('txt-ind', this)" class="absolute right-2 top-8 text-slate-400 hover:text-indigo-600 p-1 rounded-full">
                         <i data-lucide="mic" class="w-5 h-5"></i>
                     </button>
                 </div>
@@ -137,12 +138,10 @@
             if(spec) document.getElementById('doc-spec').value = spec;
         }
 
-        // --- VARIABLES GRABADORA PRINCIPAL ---
+        // --- GRABADORA PRINCIPAL ---
         let mediaRecorder;
         let audioChunks = [];
         let isRecording = false;
-
-        // --- FUNCIONES PRINCIPALES ---
 
         async function toggleRecord() {
             const btn = document.getElementById('btn-record');
@@ -159,9 +158,9 @@
                     isRecording = true;
                     btn.classList.add('recording-main');
                     btn.innerHTML = '<i data-lucide="square" class="w-10 h-10 fill-current"></i>';
-                    status.textContent = "Grabando... Toca para terminar";
+                    status.textContent = "Escuchando... Toca para procesar";
                     lucide.createIcons();
-                } catch(err) { alert("Error: No se pudo acceder al micrófono principal."); }
+                } catch(err) { alert("Error: Acceso al micrófono denegado."); }
             } else {
                 mediaRecorder.stop();
                 isRecording = false;
@@ -190,9 +189,10 @@
                     const data = await res.json();
                     const output = data.output || data; 
 
-                    document.getElementById('nombre').value = output.nombre_paciente || '';
-                    document.getElementById('telefono').value = output.telefono_paciente || '';
-                    // Usamos append para no borrar lo que el médico haya podido corregir
+                    // SOLO LLENAR SI LA IA TRAE DATOS (Para no borrar lo que el médico escribió)
+                    if(output.nombre_paciente) document.getElementById('nombre').value = output.nombre_paciente;
+                    if(output.telefono_paciente) document.getElementById('telefono').value = output.telefono_paciente;
+                    
                     document.getElementById('txt-diag').value = `MOTIVO: ${output.motivo || ''}\n\nDX: ${output.diagnostico || ''}`;
                     document.getElementById('txt-plan').value = output.plan || '';
                     document.getElementById('txt-ind').value = output.recomendaciones_y_precauciones || '';
@@ -204,39 +204,29 @@
             };
         }
 
-        // --- NUEVA FUNCIÓN: DICTADO INDIVIDUAL ---
+        // --- DICTADO INDIVIDUAL (MODO SOBREESCRIBIR) ---
         function dictarCampo(targetId, btnElement) {
-            if (!('webkitSpeechRecognition' in window)) return alert("Tu navegador no soporta dictado individual.");
+            if (!('webkitSpeechRecognition' in window)) return alert("Navegador no compatible.");
 
             const recognition = new webkitSpeechRecognition();
             recognition.lang = 'es-ES';
             recognition.interimResults = false;
 
-            const iconElement = btnElement.querySelector('i');
-            btnElement.classList.add('mic-active'); // Feedback visual
+            btnElement.classList.add('mic-active'); 
 
             recognition.onresult = (event) => {
                 const transcript = event.results[0][0].transcript;
                 const targetField = document.getElementById(targetId);
                 
-                // Lógica inteligente: Si el campo está vacío, reemplaza. Si tiene texto, agrega un espacio y el nuevo texto.
-                if (targetField.value.trim() === "") {
-                    targetField.value = transcript;
-                } else {
-                    targetField.value += " " + transcript;
-                }
+                // LÓGICA CORREGIDA: SIEMPRE SOBREESCRIBE
+                targetField.value = transcript;
+                
                 resizeAllTextareas();
             };
 
-            recognition.onerror = (event) => { console.error("Error dictado:", event.error); };
-            
-            recognition.onend = () => {
-                btnElement.classList.remove('mic-active'); // Quitar feedback
-            };
-
+            recognition.onend = () => { btnElement.classList.remove('mic-active'); };
             recognition.start();
         }
-
 
         // --- ENVÍO Y UTILIDADES ---
         function sendWhatsapp() {
@@ -263,10 +253,9 @@
         }
 
         function reset() {
-            if(confirm("¿Borrar datos del paciente y volver al inicio?")) {
+            if(confirm("¿Nueva consulta? (Se borrarán los datos del paciente)")) {
                 document.getElementById('section-record').classList.remove('hidden');
                 document.getElementById('section-edit').classList.add('hidden');
-                // Limpiar solo campos del paciente
                 document.getElementById('nombre').value = '';
                 document.getElementById('telefono').value = '';
                 document.getElementById('txt-diag').value = '';
