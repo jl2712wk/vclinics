@@ -27,7 +27,7 @@
         <div class="flex items-center gap-2 text-indigo-700 font-bold text-xl">
             <i data-lucide="activity"></i> ClinicalV
         </div>
-        <div class="text-xs text-slate-400 font-mono">BETA v1.31</div>
+        <div class="text-xs text-slate-400 font-mono">BETA v1.4</div>
     </header>
 
     <div id="loader" class="fixed inset-0 bg-slate-900/90 z-50 hidden flex flex-col items-center justify-center text-white">
@@ -51,13 +51,13 @@
             <div class="space-y-3">
                 <div class="relative">
                     <input type="text" id="nombre" placeholder="Nombre Paciente" class="w-full bg-slate-50 border border-slate-200 rounded-lg pl-3 pr-10 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500 font-bold">
-                    <button onclick="dictarCampo('nombre', this)" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 p-1 rounded-full transition-all">
+                    <button type="button" onclick="dictarCampo('nombre', this)" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 p-2 rounded-full transition-all z-10">
                         <i data-lucide="mic" class="w-5 h-5"></i>
                     </button>
                 </div>
                 <div class="relative">
                     <input type="tel" id="telefono" placeholder="WhatsApp (Ej: 0414...)" class="w-full bg-slate-50 border border-slate-200 rounded-lg pl-3 pr-10 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
-                    <button onclick="dictarCampo('telefono', this)" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 p-1 rounded-full transition-all">
+                    <button type="button" onclick="dictarCampo('telefono', this)" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 p-2 rounded-full transition-all z-10">
                         <i data-lucide="mic" class="w-5 h-5"></i>
                     </button>
                 </div>
@@ -68,7 +68,7 @@
             <h2 class="text-slate-700 font-bold mb-2">Dictar Consulta</h2>
             <p class="text-slate-400 text-sm mb-6">Presiona el botón para empezar</p>
             
-            <button id="btn-record" onclick="toggleRecord()" class="w-24 h-24 bg-indigo-600 rounded-full flex items-center justify-center text-white shadow-xl mx-auto transition-transform hover:scale-105 active:scale-95">
+            <button type="button" id="btn-record" onclick="toggleRecord()" class="w-24 h-24 bg-indigo-600 rounded-full flex items-center justify-center text-white shadow-xl mx-auto transition-transform hover:scale-105 active:scale-95">
                 <i data-lucide="mic" class="w-10 h-10"></i>
             </button>
             
@@ -78,38 +78,38 @@
         <div id="section-edit" class="hidden bg-white p-6 rounded-2xl shadow-lg">
             <div class="flex justify-between items-center mb-4 border-b pb-2">
                 <h3 class="font-bold text-slate-800">Resultados</h3>
-                <button onclick="reset()" class="text-xs text-red-500 font-bold">NUEVA CONSULTA</button>
+                <button type="button" onclick="reset()" class="text-xs text-red-500 font-bold">NUEVA CONSULTA</button>
             </div>
             
             <div class="space-y-4">
                 <div class="relative">
                     <label class="text-xs font-bold text-slate-400 mb-1 block">Diagnóstico</label>
                     <textarea id="txt-diag" class="w-full bg-slate-50 border rounded-lg pl-3 pr-10 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 min-h-[60px]"></textarea>
-                     <button onclick="dictarCampo('txt-diag', this)" class="absolute right-2 top-8 text-slate-400 hover:text-indigo-600 p-1 rounded-full">
+                     <button type="button" onclick="dictarCampo('txt-diag', this)" class="absolute right-2 top-8 text-slate-400 hover:text-indigo-600 p-2 rounded-full z-10">
                         <i data-lucide="mic" class="w-5 h-5"></i>
                     </button>
                 </div>
                 <div class="relative">
                      <label class="text-xs font-bold text-slate-400 mb-1 block">Plan / Tratamiento</label>
                     <textarea id="txt-plan" class="w-full bg-slate-50 border rounded-lg pl-3 pr-10 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 min-h-[80px]"></textarea>
-                     <button onclick="dictarCampo('txt-plan', this)" class="absolute right-2 top-8 text-slate-400 hover:text-indigo-600 p-1 rounded-full">
+                     <button type="button" onclick="dictarCampo('txt-plan', this)" class="absolute right-2 top-8 text-slate-400 hover:text-indigo-600 p-2 rounded-full z-10">
                         <i data-lucide="mic" class="w-5 h-5"></i>
                     </button>
                 </div>
                 <div class="relative">
                      <label class="text-xs font-bold text-slate-400 mb-1 block">Indicaciones</label>
                     <textarea id="txt-ind" class="w-full bg-slate-50 border rounded-lg pl-3 pr-10 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500 min-h-[60px]"></textarea>
-                     <button onclick="dictarCampo('txt-ind', this)" class="absolute right-2 top-8 text-slate-400 hover:text-indigo-600 p-1 rounded-full">
+                     <button type="button" onclick="dictarCampo('txt-ind', this)" class="absolute right-2 top-8 text-slate-400 hover:text-indigo-600 p-2 rounded-full z-10">
                         <i data-lucide="mic" class="w-5 h-5"></i>
                     </button>
                 </div>
             </div>
 
             <div class="mt-8 space-y-3">
-                <button onclick="sendWhatsapp()" class="w-full py-4 bg-green-500 text-white font-bold rounded-xl shadow-md hover:bg-green-600 flex items-center justify-center gap-2 transition-transform active:scale-95">
+                <button type="button" onclick="sendWhatsapp()" class="w-full py-4 bg-green-500 text-white font-bold rounded-xl shadow-md hover:bg-green-600 flex items-center justify-center gap-2 transition-transform active:scale-95">
                     <i data-lucide="message-circle"></i> Enviar por WhatsApp
                 </button>
-                <button onclick="copyText()" class="w-full py-3 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 flex items-center justify-center gap-2">
+                <button type="button" onclick="copyText()" class="w-full py-3 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 flex items-center justify-center gap-2">
                     <i data-lucide="copy"></i> Copiar Texto
                 </button>
             </div>
@@ -189,7 +189,6 @@
                     const data = await res.json();
                     const output = data.output || data; 
 
-                    // SOLO LLENAR SI LA IA TRAE DATOS (Para no borrar lo que el médico escribió)
                     if(output.nombre_paciente) document.getElementById('nombre').value = output.nombre_paciente;
                     if(output.telefono_paciente) document.getElementById('telefono').value = output.telefono_paciente;
                     
@@ -204,27 +203,52 @@
             };
         }
 
-        // --- DICTADO INDIVIDUAL (MODO SOBREESCRIBIR) ---
+        // --- DICTADO INDIVIDUAL (CORREGIDO) ---
         function dictarCampo(targetId, btnElement) {
-            if (!('webkitSpeechRecognition' in window)) return alert("Navegador no compatible.");
+            // Verificar soporte
+            if (!('webkitSpeechRecognition' in window)) {
+                return alert("Tu navegador no soporta dictado. Usa Chrome.");
+            }
 
             const recognition = new webkitSpeechRecognition();
             recognition.lang = 'es-ES';
             recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
 
+            // Feedback visual
             btnElement.classList.add('mic-active'); 
+
+            recognition.onstart = () => {
+                // Opcional: Podrías poner un console.log para saber que inició
+            };
 
             recognition.onresult = (event) => {
                 const transcript = event.results[0][0].transcript;
                 const targetField = document.getElementById(targetId);
                 
-                // LÓGICA CORREGIDA: SIEMPRE SOBREESCRIBE
-                targetField.value = transcript;
-                
-                resizeAllTextareas();
+                if (targetField) {
+                    // AQUÍ ESTÁ LA MAGIA: Reemplaza todo el valor
+                    targetField.value = transcript; 
+                    // Ajustar altura si es textarea
+                    if(targetField.tagName === 'TEXTAREA') {
+                        targetField.style.height = 'auto';
+                        targetField.style.height = targetField.scrollHeight + 'px';
+                    }
+                }
             };
 
-            recognition.onend = () => { btnElement.classList.remove('mic-active'); };
+            recognition.onerror = (event) => {
+                console.error("Error dictado:", event.error);
+                btnElement.classList.remove('mic-active');
+                if (event.error === 'no-speech') {
+                    alert("No se escuchó nada. Intenta de nuevo acercándote al micrófono.");
+                }
+            };
+
+            recognition.onend = () => { 
+                btnElement.classList.remove('mic-active'); 
+            };
+
             recognition.start();
         }
 
