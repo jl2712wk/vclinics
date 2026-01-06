@@ -3,9 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClinicalV - Acceso Libre</title>
+    <title>ClinicalV - Acceso Profesional</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- AGREGAMOS SUPABASE -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <style>
         body { font-family: sans-serif; background: #f0f9ff; }
         
@@ -21,13 +24,46 @@
         textarea::-webkit-scrollbar { width: 0px; background: transparent; }
     </style>
 </head>
-<body class="min-h-screen flex flex-col items-center p-4 pb-20">
+<body class="min-h-screen flex flex-col items-center p-4 pb-20 relative">
+
+    <!-- === PANTALLA DE LOGIN / PAYWALL === -->
+    <div id="login-modal" class="fixed inset-0 bg-slate-900 z-[100] flex flex-col items-center justify-center p-6 transition-opacity duration-300">
+        <div class="bg-white p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center">
+            <div class="text-indigo-600 mb-4 flex justify-center">
+                <i data-lucide="lock-keyhole" class="w-12 h-12"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-slate-800 mb-2">Acceso Profesional</h2>
+            <p class="text-slate-500 text-sm mb-6">Sistema conectado a base de datos en tiempo real.</p>
+            
+            <form onsubmit="handleLogin(event)" class="space-y-4">
+                <div class="relative">
+                    <i data-lucide="mail" class="absolute left-3 top-3 w-5 h-5 text-slate-400"></i>
+                    <input type="email" id="login-email" placeholder="tucorreo@medico.com" required 
+                        class="w-full bg-slate-50 border border-slate-200 rounded-lg pl-10 pr-3 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                </div>
+                <!-- Mensaje de carga -->
+                <button id="btn-login" type="submit" class="w-full py-3 bg-indigo-600 text-white font-bold rounded-xl shadow-lg hover:bg-indigo-700 transition-transform active:scale-95 disabled:opacity-50">
+                    Verificar Acceso
+                </button>
+            </form>
+            <p id="login-error" class="text-red-500 text-xs font-bold mt-4 hidden"></p>
+            <div class="mt-6 border-t pt-4">
+                <a href="#" class="text-xs text-slate-400 hover:text-indigo-600 transition-colors">¿Problemas para ingresar?</a>
+            </div>
+        </div>
+    </div>
+    <!-- =================================== -->
 
     <header class="w-full max-w-md bg-white p-4 rounded-xl shadow-sm mb-4 flex justify-between items-center">
         <div class="flex items-center gap-2 text-indigo-700 font-bold text-xl">
             <i data-lucide="activity"></i> ClinicalV
         </div>
-        <div class="text-xs text-slate-400 font-mono">BETA v1.5</div>
+        <div class="flex items-center gap-2">
+            <div id="user-badge" class="hidden md:block text-[10px] bg-green-100 text-green-700 px-2 py-1 rounded-full font-bold uppercase tracking-wider">Activo</div>
+            <button onclick="logout()" class="text-slate-400 hover:text-red-500" title="Cerrar Sesión">
+                <i data-lucide="log-out" class="w-4 h-4"></i>
+            </button>
+        </div>
     </header>
 
     <div id="loader" class="fixed inset-0 bg-slate-900/90 z-50 hidden flex flex-col items-center justify-center text-white">
@@ -35,18 +71,26 @@
         <p id="loader-text" class="font-bold text-lg">Procesando...</p>
     </div>
 
-    <main class="w-full max-w-md space-y-4">
+    <main class="w-full max-w-md space-y-4 filter blur-sm transition-all duration-500" id="main-content">
 
+        <!-- SECCIÓN DATOS DEL MÉDICO -->
         <div class="bg-indigo-50 border border-indigo-100 p-4 rounded-xl flex flex-col gap-3">
             <div class="flex items-center gap-2 text-indigo-800 font-bold text-sm uppercase tracking-wide">
                 <i data-lucide="user-round-cog" class="w-4 h-4"></i> Datos del Médico
             </div>
-            <div class="grid grid-cols-2 gap-3">
-                <input type="text" id="doc-name" placeholder="Tu Nombre" class="w-full bg-white border-transparent rounded-lg px-3 py-2 text-sm outline-none font-semibold text-slate-700" oninput="saveProfile()">
-                <input type="text" id="doc-spec" placeholder="Especialidad" class="w-full bg-white border-transparent rounded-lg px-3 py-2 text-sm outline-none text-slate-700" oninput="saveProfile()">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div class="relative">
+                    <i data-lucide="stethoscope" class="absolute left-3 top-2.5 w-4 h-4 text-slate-400"></i>
+                    <input type="text" id="doc-name" placeholder="Nombre (Dr. Ejemplo)" class="w-full bg-white border-transparent rounded-lg pl-9 pr-3 py-2 text-sm outline-none font-semibold text-slate-700 placeholder-slate-400 focus:ring-2 focus:ring-indigo-200 transition-all" oninput="saveProfile()">
+                </div>
+                <div class="relative">
+                    <i data-lucide="award" class="absolute left-3 top-2.5 w-4 h-4 text-slate-400"></i>
+                    <input type="text" id="doc-spec" placeholder="Especialidad (Ej: Cardiólogo)" class="w-full bg-white border-transparent rounded-lg pl-9 pr-3 py-2 text-sm outline-none text-slate-700 placeholder-slate-400 focus:ring-2 focus:ring-indigo-200 transition-all" oninput="saveProfile()">
+                </div>
             </div>
         </div>
 
+        <!-- SECCIÓN PACIENTE -->
         <div id="section-patient" class="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
             <div class="space-y-3">
                 <div class="relative">
@@ -64,6 +108,7 @@
             </div>
         </div>
 
+        <!-- SECCIÓN GRABADORA -->
         <div id="section-record" class="bg-white p-8 rounded-2xl shadow-lg text-center">
             <h2 class="text-slate-700 font-bold mb-2">Dictar Consulta</h2>
             <p class="text-slate-400 text-sm mb-6">Presiona el botón para empezar</p>
@@ -75,6 +120,7 @@
             <p id="status" class="mt-6 text-indigo-600 font-medium h-6"></p>
         </div>
 
+        <!-- SECCIÓN RESULTADOS / EDICIÓN -->
         <div id="section-edit" class="hidden bg-white p-6 rounded-2xl shadow-lg">
             <div class="flex justify-between items-center mb-4 border-b pb-2">
                 <h3 class="font-bold text-slate-800">Resultados</h3>
@@ -118,13 +164,92 @@
     </main>
 
     <script>
-        // --- CONFIGURACIÓN ---
-        const N8N_WEBHOOK = 'https://general-empresas-n8n.w06teu.easypanel.host/webhook/24d6b820-8227-4167-a747-f6be56cd7c34';
+        // --- CONFIGURACIÓN DE SUPABASE ---
+        const SUPABASE_URL = 'https://hlhopwhvntevmqmndthv.supabase.co';
+        // Llave pública (Anon Public Key). Segura para usar en el cliente.
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhsaG9wd2h2bnRldm1xbW5kdGh2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg1MDU2MzQsImV4cCI6MjA3NDA4MTYzNH0.wwt2gjRokyQnUwYIApHwOS6WA_a2p-dCrLQ75MJOU64';
         
+        // Inicializamos el cliente (RENOMBRADO A supabaseClient para evitar conflictos globales)
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // Webhook de n8n para el audio
+        const N8N_WEBHOOK = 'https://general-empresas-n8n.w06teu.easypanel.host/webhook/24d6b820-8227-4167-a747-f6be56cd7c34';
+
         window.onload = () => {
             lucide.createIcons();
-            loadProfile();
+            checkAuth(); 
         };
+
+        // --- SISTEMA DE LOGIN CON SUPABASE ---
+        function checkAuth() {
+            const isAuth = localStorage.getItem('clinicalv_auth');
+            const modal = document.getElementById('login-modal');
+            const main = document.getElementById('main-content');
+            
+            if (isAuth === 'true') {
+                modal.classList.add('hidden');
+                main.classList.remove('blur-sm');
+                loadProfile(); 
+            } else {
+                modal.classList.remove('hidden');
+                main.classList.add('blur-sm');
+            }
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const emailInput = document.getElementById('login-email').value.toLowerCase().trim();
+            const errorMsg = document.getElementById('login-error');
+            const btnLogin = document.getElementById('btn-login');
+
+            // Feedback visual de carga
+            btnLogin.innerHTML = "Verificando...";
+            btnLogin.disabled = true;
+            errorMsg.classList.add('hidden');
+
+            try {
+                // CONSULTA A SUPABASE
+                // Asumimos que tu tabla se llama 'medicos_autorizados'
+                // y tiene columnas: email (text), activo (boolean)
+                const { data, error } = await supabaseClient
+                    .from('medicos_autorizados') 
+                    .select('*')
+                    .eq('email', emailInput)
+                    .single(); // Esperamos 1 solo resultado
+
+                if (error) throw error;
+
+                if (data && data.activo) {
+                    // LOGIN EXITOSO
+                    localStorage.setItem('clinicalv_auth', 'true');
+                    localStorage.setItem('clinicalv_user_email', emailInput);
+                    
+                    // Opcional: Guardar fecha de último acceso en la BD
+                    // await supabaseClient.from('medicos_autorizados').update({ ultimo_acceso: new Date() }).eq('email', emailInput);
+                    
+                    checkAuth();
+                } else {
+                    // EXISTE PERO NO ESTÁ ACTIVO O NO SE ENCONTRÓ
+                    throw new Error("Usuario no encontrado o inactivo");
+                }
+
+            } catch (err) {
+                console.error("Error Login:", err);
+                errorMsg.textContent = "🚫 Acceso denegado. Correo no registrado o suscripción vencida.";
+                errorMsg.classList.remove('hidden');
+                if (navigator.vibrate) navigator.vibrate(200);
+            } finally {
+                btnLogin.innerHTML = "Verificar Acceso";
+                btnLogin.disabled = false;
+            }
+        }
+
+        function logout() {
+            if(confirm("¿Cerrar sesión?")) {
+                localStorage.removeItem('clinicalv_auth');
+                location.reload();
+            }
+        }
 
         // --- GESTIÓN DE PERFIL ---
         function saveProfile() {
@@ -138,7 +263,7 @@
             if(spec) document.getElementById('doc-spec').value = spec;
         }
 
-        // --- GRABADORA PRINCIPAL ---
+        // --- GRABADORA PRINCIPAL (Código intacto) ---
         let mediaRecorder;
         let audioChunks = [];
         let isRecording = false;
@@ -193,7 +318,6 @@
                     const campoNombre = document.getElementById('nombre');
                     const campoTelefono = document.getElementById('telefono');
 
-                    // Solo llenamos si el campo está vacío. Si ya tiene algo, NO lo tocamos.
                     if (output.nombre_paciente && campoNombre.value.trim() === "") {
                         campoNombre.value = output.nombre_paciente;
                     }
@@ -201,7 +325,6 @@
                         campoTelefono.value = output.telefono_paciente;
                     }
                     
-                    // Los campos de resumen sí los sobrescribimos porque ese es el objetivo del dictado
                     document.getElementById('txt-diag').value = `MOTIVO: ${output.motivo || ''}\n\nDX: ${output.diagnostico || ''}`;
                     document.getElementById('txt-plan').value = output.plan || '';
                     document.getElementById('txt-ind').value = output.recomendaciones_y_precauciones || '';
@@ -251,8 +374,10 @@
         function sendWhatsapp() {
             const phone = document.getElementById('telefono').value.replace(/\D/g, '');
             const nombre = document.getElementById('nombre').value;
+            
             const docName = document.getElementById('doc-name').value || "Su Médico";
-            const docSpec = document.getElementById('doc-spec').value || "Medicina General";
+            const docSpec = document.getElementById('doc-spec').value || "";
+            const docHeader = docSpec ? `${docName} - ${docSpec}` : docName;
             
             if(!phone) return alert("Falta el teléfono del paciente");
             
@@ -260,15 +385,19 @@
             if(phone.length === 11 && phone.startsWith('0')) finalPhone = '58' + phone.substring(1);
             else if(phone.length === 10) finalPhone = '58' + phone;
 
-            const msg = `*RESUMEN MÉDICO* 🩺\n*${docName}* - ${docSpec}\n\n👤 *Paciente:* ${nombre}\n\n🔎 *DIAGNÓSTICO:*\n${document.getElementById('txt-diag').value}\n\n💊 *TRATAMIENTO:*\n${document.getElementById('txt-plan').value}\n\n⚠️ *INDICACIONES:*\n${document.getElementById('txt-ind').value}\n\n_Enviado con ClinicalV_`;
+            const msg = `*RESUMEN MÉDICO* 🩺\n*${docHeader}*\n\n👤 *Paciente:* ${nombre}\n\n🔎 *DIAGNÓSTICO:*\n${document.getElementById('txt-diag').value}\n\n💊 *TRATAMIENTO:*\n${document.getElementById('txt-plan').value}\n\n⚠️ *INDICACIONES:*\n${document.getElementById('txt-ind').value}\n\n_Enviado con ClinicalV_`;
 
             window.open(`https://wa.me/${finalPhone}?text=${encodeURIComponent(msg)}`, '_blank');
         }
         
         function copyText() {
-            const docName = document.getElementById('doc-name').value;
-            const msg = `RESUMEN MÉDICO - ${docName}\n\nPACIENTE: ${document.getElementById('nombre').value}\n\n${document.getElementById('txt-diag').value}\n\nPLAN:\n${document.getElementById('txt-plan').value}`;
-            navigator.clipboard.writeText(msg).then(() => alert("Texto Copiado"));
+            const docName = document.getElementById('doc-name').value || "Su Médico";
+            const docSpec = document.getElementById('doc-spec').value || "";
+            const docHeader = docSpec ? `${docName} (${docSpec})` : docName;
+
+            const msg = `RESUMEN MÉDICO\n${docHeader}\n\nPACIENTE: ${document.getElementById('nombre').value}\n\n${document.getElementById('txt-diag').value}\n\nPLAN:\n${document.getElementById('txt-plan').value}\n\nINDICACIONES:\n${document.getElementById('txt-ind').value}`;
+            
+            navigator.clipboard.writeText(msg).then(() => alert("Texto Copiado al Portapapeles"));
         }
 
         function reset() {
