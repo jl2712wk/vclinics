@@ -6,8 +6,8 @@
     <title>ClinicalV - Acceso Profesional</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- AGREGAMOS SUPABASE -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
     <style>
         body { font-family: sans-serif; background: #f0f9ff; }
@@ -26,7 +26,6 @@
 </head>
 <body class="min-h-screen flex flex-col items-center p-4 pb-20 relative">
 
-    <!-- === PANTALLA DE LOGIN / PAYWALL === -->
     <div id="login-modal" class="fixed inset-0 bg-slate-900 z-[100] flex flex-col items-center justify-center p-6 transition-opacity duration-300">
         <div class="bg-white p-8 rounded-2xl shadow-2xl max-w-sm w-full text-center">
             <div class="text-indigo-600 mb-4 flex justify-center">
@@ -39,9 +38,8 @@
                 <div class="relative">
                     <i data-lucide="mail" class="absolute left-3 top-3 w-5 h-5 text-slate-400"></i>
                     <input type="email" id="login-email" placeholder="tucorreo@medico.com" required 
-                        class="w-full bg-slate-50 border border-slate-200 rounded-lg pl-10 pr-3 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                        class="w-full bg-slate-5 border border-slate-200 rounded-lg pl-10 pr-3 py-3 text-sm outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
                 </div>
-                <!-- Mensaje de carga -->
                 <button id="btn-login" type="submit" class="w-full py-3 bg-indigo-600 text-white font-bold rounded-xl shadow-lg hover:bg-indigo-700 transition-transform active:scale-95 disabled:opacity-50">
                     Verificar Acceso
                 </button>
@@ -52,8 +50,6 @@
             </div>
         </div>
     </div>
-    <!-- =================================== -->
-
     <header class="w-full max-w-md bg-white p-4 rounded-xl shadow-sm mb-4 flex justify-between items-center">
         <div class="flex items-center gap-2 text-indigo-700 font-bold text-xl">
             <i data-lucide="activity"></i> ClinicalV
@@ -73,7 +69,6 @@
 
     <main class="w-full max-w-md space-y-4 filter blur-sm transition-all duration-500" id="main-content">
 
-        <!-- SECCIÓN DATOS DEL MÉDICO -->
         <div class="bg-indigo-50 border border-indigo-100 p-4 rounded-xl flex flex-col gap-3">
             <div class="flex items-center gap-2 text-indigo-800 font-bold text-sm uppercase tracking-wide">
                 <i data-lucide="user-round-cog" class="w-4 h-4"></i> Datos del Médico
@@ -90,7 +85,6 @@
             </div>
         </div>
 
-        <!-- SECCIÓN PACIENTE -->
         <div id="section-patient" class="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
             <div class="space-y-3">
                 <div class="relative">
@@ -108,7 +102,6 @@
             </div>
         </div>
 
-        <!-- SECCIÓN GRABADORA -->
         <div id="section-record" class="bg-white p-8 rounded-2xl shadow-lg text-center">
             <h2 class="text-slate-700 font-bold mb-2">Dictar Consulta</h2>
             <p class="text-slate-400 text-sm mb-6">Presiona el botón para empezar</p>
@@ -120,7 +113,6 @@
             <p id="status" class="mt-6 text-indigo-600 font-medium h-6"></p>
         </div>
 
-        <!-- SECCIÓN RESULTADOS / EDICIÓN -->
         <div id="section-edit" class="hidden bg-white p-6 rounded-2xl shadow-lg">
             <div class="flex justify-between items-center mb-4 border-b pb-2">
                 <h3 class="font-bold text-slate-800">Resultados</h3>
@@ -152,9 +144,14 @@
             </div>
 
             <div class="mt-8 space-y-3">
-                <button type="button" onclick="sendWhatsapp()" class="w-full py-4 bg-green-500 text-white font-bold rounded-xl shadow-md hover:bg-green-600 flex items-center justify-center gap-2 transition-transform active:scale-95">
+                <button type="button" onclick="generatePDF()" class="w-full py-3 bg-slate-800 text-white font-bold rounded-xl shadow-md hover:bg-slate-900 flex items-center justify-center gap-2 transition-transform active:scale-95">
+                    <i data-lucide="file-text"></i> Descargar Informe Oficial (PDF)
+                </button>
+
+                <button type="button" onclick="sendWhatsapp()" class="w-full py-3 bg-green-500 text-white font-bold rounded-xl shadow-md hover:bg-green-600 flex items-center justify-center gap-2 transition-transform active:scale-95">
                     <i data-lucide="message-circle"></i> Enviar por WhatsApp
                 </button>
+                
                 <button type="button" onclick="copyText()" class="w-full py-3 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl hover:bg-slate-50 flex items-center justify-center gap-2">
                     <i data-lucide="copy"></i> Copiar Texto
                 </button>
@@ -166,10 +163,8 @@
     <script>
         // --- CONFIGURACIÓN DE SUPABASE ---
         const SUPABASE_URL = 'https://hlhopwhvntevmqmndthv.supabase.co';
-        // Llave pública (Anon Public Key). Segura para usar en el cliente.
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhsaG9wd2h2bnRldm1xbW5kdGh2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg1MDU2MzQsImV4cCI6MjA3NDA4MTYzNH0.wwt2gjRokyQnUwYIApHwOS6WA_a2p-dCrLQ75MJOU64';
         
-        // Inicializamos el cliente (RENOMBRADO A supabaseClient para evitar conflictos globales)
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         // Webhook de n8n para el audio
@@ -202,34 +197,24 @@
             const errorMsg = document.getElementById('login-error');
             const btnLogin = document.getElementById('btn-login');
 
-            // Feedback visual de carga
             btnLogin.innerHTML = "Verificando...";
             btnLogin.disabled = true;
             errorMsg.classList.add('hidden');
 
             try {
-                // CONSULTA A SUPABASE
-                // Asumimos que tu tabla se llama 'medicos_autorizados'
-                // y tiene columnas: email (text), activo (boolean)
                 const { data, error } = await supabaseClient
                     .from('medicos_autorizados') 
                     .select('*')
                     .eq('email', emailInput)
-                    .single(); // Esperamos 1 solo resultado
+                    .single(); 
 
                 if (error) throw error;
 
                 if (data && data.activo) {
-                    // LOGIN EXITOSO
                     localStorage.setItem('clinicalv_auth', 'true');
                     localStorage.setItem('clinicalv_user_email', emailInput);
-                    
-                    // Opcional: Guardar fecha de último acceso en la BD
-                    // await supabaseClient.from('medicos_autorizados').update({ ultimo_acceso: new Date() }).eq('email', emailInput);
-                    
                     checkAuth();
                 } else {
-                    // EXISTE PERO NO ESTÁ ACTIVO O NO SE ENCONTRÓ
                     throw new Error("Usuario no encontrado o inactivo");
                 }
 
@@ -251,7 +236,6 @@
             }
         }
 
-        // --- GESTIÓN DE PERFIL ---
         function saveProfile() {
             localStorage.setItem('clinicalv_doc_name', document.getElementById('doc-name').value);
             localStorage.setItem('clinicalv_doc_spec', document.getElementById('doc-spec').value);
@@ -263,35 +247,148 @@
             if(spec) document.getElementById('doc-spec').value = spec;
         }
 
-        // --- GRABADORA PRINCIPAL (Código intacto) ---
+        function cleanTextForPDF(text) {
+            if (!text) return "";
+            return text
+                .replace(/•/g, "-")          // Cambia viñetas gordas por guiones
+                .replace(/[\u{1F600}-\u{1F6FF}]/gu, "") // Elimina Emojis
+                .replace(/[^\x20-\x7E\xA0-\xFF\n\r\t]/g, "") // Elimina caracteres raros no latinos
+                .trim();
+        }
+
+// --- GENERAR Y COMPARTIR PDF (SOLUCIÓN AL PROBLEMA 2) ---
+        async function generatePDF() {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // 1. Obtener y LIMPIAR Datos
+            const docName = cleanTextForPDF(document.getElementById('doc-name').value) || "Dr. Desconocido";
+            const docSpec = cleanTextForPDF(document.getElementById('doc-spec').value) || "Medicina General";
+            const patientName = cleanTextForPDF(document.getElementById('nombre').value) || "Paciente";
+            
+            // Aquí aplicamos la limpieza para evitar símbolos raros
+            const diag = cleanTextForPDF(document.getElementById('txt-diag').value);
+            const plan = cleanTextForPDF(document.getElementById('txt-plan').value);
+            const ind = cleanTextForPDF(document.getElementById('txt-ind').value);
+            
+            const date = new Date().toLocaleDateString("es-VE");
+
+            // 2. Encabezado
+            doc.setFontSize(18);
+            doc.setTextColor(79, 70, 229); 
+            doc.text(`Dr. ${docName}`, 20, 20);
+            
+            doc.setFontSize(10);
+            doc.setTextColor(100);
+            doc.text(docSpec.toUpperCase(), 20, 26);
+            doc.setDrawColor(200);
+            doc.line(20, 30, 190, 30);
+
+            // 3. Info Paciente
+            doc.setFontSize(12);
+            doc.setTextColor(0);
+            doc.text(`Fecha: ${date}`, 140, 40);
+            doc.text(`Paciente: ${patientName}`, 20, 40);
+
+            // 4. Cuerpo del Informe
+            let yPos = 55;
+            const addSection = (title, content) => {
+                if(!content) return;
+                doc.setFontSize(11);
+                doc.setFont(undefined, 'bold');
+                doc.text(title, 20, yPos);
+                yPos += 7;
+                doc.setFont(undefined, 'normal');
+                const splitText = doc.splitTextToSize(content, 170);
+                doc.text(splitText, 20, yPos);
+                yPos += (splitText.length * 5) + 10;
+            };
+
+            addSection("DIAGNÓSTICO:", diag);
+            addSection("PLAN / TRATAMIENTO:", plan);
+            addSection("INDICACIONES AL PACIENTE:", ind);
+
+            // 5. Footer
+            doc.setFontSize(8);
+            doc.setTextColor(150);
+            doc.text("Generado y firmado digitalmente vía ClinicalV", 20, 280);
+
+            // --- LÓGICA DE COMPARTIR (WHATSAPP) ---
+            const fileName = `Informe_${patientName.replace(/ /g, "_")}.pdf`;
+            
+            // Convertimos el PDF a un archivo real (Blob)
+            const pdfBlob = doc.output('blob');
+            const pdfFile = new File([pdfBlob], fileName, { type: "application/pdf" });
+
+            // Intentamos usar la API Nativa de Compartir (Celulares)
+            if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+                try {
+                    await navigator.share({
+                        files: [pdfFile],
+                        title: 'Informe Médico',
+                        text: `Adjunto informe médico del paciente ${patientName}.`
+                    });
+                } catch (error) {
+                    console.log("Error compartiendo o cancelado por usuario", error);
+                }
+            } else {
+                // Si estamos en PC o no soporta compartir, descargamos normal
+                doc.save(fileName);
+                alert("PDF Descargado. Arrástralo a WhatsApp Web para enviarlo.");
+            }
+        }
+
+
+        // --- GRABADORA PRINCIPAL ---
         let mediaRecorder;
         let audioChunks = [];
         let isRecording = false;
 
-        async function toggleRecord() {
+async function toggleRecord() {
             const btn = document.getElementById('btn-record');
             const status = document.getElementById('status');
 
             if(!isRecording) {
+                // INICIAR GRABACIÓN
                 try {
                     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                     mediaRecorder = new MediaRecorder(stream);
                     audioChunks = [];
+                    
                     mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
-                    mediaRecorder.onstop = processAudio;
+                    
+                    // Al detenerse, procesamos el audio
+                    mediaRecorder.onstop = () => {
+                        // AQUÍ ESTÁ EL ARREGLO:
+                        // Apagamos cada "pista" del micrófono para liberar el hardware
+                        stream.getTracks().forEach(track => track.stop());
+                        processAudio();
+                    };
+                    
                     mediaRecorder.start();
                     isRecording = true;
+                    
+                    // Cambio visual
                     btn.classList.add('recording-main');
                     btn.innerHTML = '<i data-lucide="square" class="w-10 h-10 fill-current"></i>';
                     status.textContent = "Escuchando... Toca para procesar";
                     lucide.createIcons();
-                } catch(err) { alert("Error: Acceso al micrófono denegado."); }
+                    
+                } catch(err) { 
+                    alert("Error: Acceso al micrófono denegado."); 
+                    console.error(err);
+                }
             } else {
-                mediaRecorder.stop();
+                // DETENER GRABACIÓN
+                // Esto disparará el evento 'onstop' que definimos arriba
+                mediaRecorder.stop(); 
+                
                 isRecording = false;
+                
+                // Cambio visual inmediato
                 btn.classList.remove('recording-main');
                 btn.innerHTML = '<i data-lucide="mic" class="w-10 h-10"></i>';
-                status.textContent = "";
+                status.textContent = "Procesando...";
                 lucide.createIcons();
             }
         }
@@ -314,7 +411,6 @@
                     const data = await res.json();
                     const output = data.output || data; 
 
-                    // --- LÓGICA DE PROTECCIÓN DE DATOS ---
                     const campoNombre = document.getElementById('nombre');
                     const campoTelefono = document.getElementById('telefono');
 
@@ -336,45 +432,36 @@
             };
         }
 
-        // --- DICTADO INDIVIDUAL ---
         function dictarCampo(targetId, btnElement) {
             if (!('webkitSpeechRecognition' in window)) return alert("Tu navegador no soporta dictado. Usa Chrome.");
-
             const recognition = new webkitSpeechRecognition();
             recognition.lang = 'es-ES';
             recognition.interimResults = false;
             recognition.maxAlternatives = 1;
-
             btnElement.classList.add('mic-active'); 
-
             recognition.onresult = (event) => {
                 const transcript = event.results[0][0].transcript;
                 const targetField = document.getElementById(targetId);
-                
                 if (targetField) {
-                    targetField.value = transcript; // MODO REEMPLAZO
+                    targetField.value = transcript; 
                     if(targetField.tagName === 'TEXTAREA') {
                         targetField.style.height = 'auto';
                         targetField.style.height = targetField.scrollHeight + 'px';
                     }
                 }
             };
-
             recognition.onerror = (event) => {
                 console.error("Error dictado:", event.error);
                 btnElement.classList.remove('mic-active');
                 if (event.error === 'no-speech') alert("No se escuchó nada.");
             };
-
             recognition.onend = () => { btnElement.classList.remove('mic-active'); };
             recognition.start();
         }
 
-        // --- ENVÍO Y UTILIDADES ---
         function sendWhatsapp() {
             const phone = document.getElementById('telefono').value.replace(/\D/g, '');
             const nombre = document.getElementById('nombre').value;
-            
             const docName = document.getElementById('doc-name').value || "Su Médico";
             const docSpec = document.getElementById('doc-spec').value || "";
             const docHeader = docSpec ? `${docName} - ${docSpec}` : docName;
@@ -394,9 +481,7 @@
             const docName = document.getElementById('doc-name').value || "Su Médico";
             const docSpec = document.getElementById('doc-spec').value || "";
             const docHeader = docSpec ? `${docName} (${docSpec})` : docName;
-
             const msg = `RESUMEN MÉDICO\n${docHeader}\n\nPACIENTE: ${document.getElementById('nombre').value}\n\n${document.getElementById('txt-diag').value}\n\nPLAN:\n${document.getElementById('txt-plan').value}\n\nINDICACIONES:\n${document.getElementById('txt-ind').value}`;
-            
             navigator.clipboard.writeText(msg).then(() => alert("Texto Copiado al Portapapeles"));
         }
 
