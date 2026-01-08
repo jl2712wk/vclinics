@@ -304,7 +304,7 @@ async function sendSmartReport() {
 
                 // 1. Creamos un "Formulario Virtual"
                 const formData = new URLSearchParams();
-                formData.append("phone", finalPhone);
+                formData.append("email", finalPhone);
                 formData.append("patient", patientName);
                 formData.append("doctor", docName);
                 formData.append("link", publicPDFLink);
