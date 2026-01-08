@@ -81,22 +81,22 @@
             </div>
         </div>
 
-        <div id="section-patient" class="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
-            <div class="space-y-3">
-                <div class="relative">
-                    <input type="text" id="nombre" placeholder="Nombre Paciente" class="w-full bg-slate-50 border border-slate-200 rounded-lg pl-3 pr-10 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500 font-bold">
-                    <button type="button" onclick="dictarCampo('nombre', this)" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 p-2 rounded-full transition-all z-10">
-                        <i data-lucide="mic" class="w-5 h-5"></i>
-                    </button>
-                </div>
-                <div class="relative">
-                    <input type="tel" id="telefono" placeholder="WhatsApp (Ej: 0414...)" class="w-full bg-slate-50 border border-slate-200 rounded-lg pl-3 pr-10 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
-                    <button type="button" onclick="dictarCampo('telefono', this)" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 p-2 rounded-full transition-all z-10">
-                        <i data-lucide="mic" class="w-5 h-5"></i>
-                    </button>
-                </div>
-            </div>
+<div id="section-patient" class="bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+    <div class="space-y-3">
+        <div class="relative">
+            <input type="text" id="nombre" placeholder="Nombre Paciente" class="w-full bg-slate-50 border border-slate-200 rounded-lg pl-3 pr-10 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500 font-bold">
+            <button type="button" onclick="dictarCampo('nombre', this)" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 p-2 rounded-full transition-all z-10">
+                <i data-lucide="mic" class="w-5 h-5"></i>
+            </button>
         </div>
+        <div class="relative">
+            <input type="email" id="email" placeholder="Correo (ej: paciente@gmail.com)" class="w-full bg-slate-50 border border-slate-200 rounded-lg pl-3 pr-10 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500">
+            <button type="button" onclick="dictarCampo('email', this)" class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-indigo-600 p-2 rounded-full transition-all z-10">
+                <i data-lucide="mic" class="w-5 h-5"></i>
+            </button>
+        </div>
+    </div>
+</div>
 
         <div id="section-record" class="bg-white p-8 rounded-2xl shadow-lg text-center">
             <h2 class="text-slate-700 font-bold mb-2">Dictar Consulta</h2>
@@ -221,114 +221,98 @@
             if(localStorage.getItem('clinicalv_doc_spec')) document.getElementById('doc-spec').value = localStorage.getItem('clinicalv_doc_spec');
         }
 
-        // --- LÓGICA DE ENVÍO AUTOMÁTICO (CORREGIDA) ---
 async function sendSmartReport() {
-            const btn = document.querySelector('button[onclick="sendSmartReport()"]');
-            const originalText = btn.innerHTML;
-            
-            const phone = document.getElementById('telefono').value.replace(/\D/g, '');
-            // Usamos la limpieza normal para el texto del PDF
-            const patientName = cleanTextForPDF(document.getElementById('nombre').value) || "Paciente";
-            const docName = cleanTextForPDF(document.getElementById('doc-name').value) || "Su Médico";
-            
-            if(!phone) return alert("⚠️ Falta el teléfono del paciente");
-            let finalPhone = phone;
-            if(phone.length === 11 && phone.startsWith('0')) finalPhone = '58' + phone.substring(1);
-            else if(phone.length === 10) finalPhone = '58' + phone;
+    const btn = document.querySelector('button[onclick="sendSmartReport()"]');
+    const originalText = btn.innerHTML;
+    
+    // 1. CAPTURAR EL EMAIL
+    const email = document.getElementById('email').value.trim();
+    // Validación simple de email (debe tener @ y .)
+    if(!email || !email.includes('@') || !email.includes('.')) {
+        return alert("⚠️ Falta un correo electrónico válido para el paciente");
+    }
 
-            btn.innerHTML = '<i class="animate-spin">⏳</i> Generando...';
-            btn.disabled = true;
+    const patientName = cleanTextForPDF(document.getElementById('nombre').value) || "Paciente";
+    const docName = cleanTextForPDF(document.getElementById('doc-name').value) || "Su Médico";
+    
+    btn.innerHTML = '<i class="animate-spin">⏳</i> Generando...';
+    btn.disabled = true;
 
-            try {
-                // --- Generar PDF ---
-                const { jsPDF } = window.jspdf;
-                const doc = new jsPDF();
-                
-                const docSpec = cleanTextForPDF(document.getElementById('doc-spec').value) || "Medicina General";
-                const diag = cleanTextForPDF(document.getElementById('txt-diag').value);
-                const plan = cleanTextForPDF(document.getElementById('txt-plan').value);
-                const ind = cleanTextForPDF(document.getElementById('txt-ind').value);
-                const date = new Date().toLocaleDateString("es-VE");
+    try {
+        // --- Generar PDF (IGUAL QUE ANTES) ---
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        const docSpec = cleanTextForPDF(document.getElementById('doc-spec').value) || "Medicina General";
+        const diag = cleanTextForPDF(document.getElementById('txt-diag').value);
+        const plan = cleanTextForPDF(document.getElementById('txt-plan').value);
+        const ind = cleanTextForPDF(document.getElementById('txt-ind').value);
+        const date = new Date().toLocaleDateString("es-VE");
 
-                doc.setFontSize(18); doc.setTextColor(79, 70, 229); doc.text(`Dr. ${docName}`, 20, 20);
-                doc.setFontSize(10); doc.setTextColor(100); doc.text(docSpec.toUpperCase(), 20, 26);
-                doc.setDrawColor(200); doc.line(20, 30, 190, 30);
-                doc.setFontSize(12); doc.setTextColor(0); doc.text(`Fecha: ${date}`, 140, 40); doc.text(`Paciente: ${patientName}`, 20, 40);
+        doc.setFontSize(18); doc.setTextColor(79, 70, 229); doc.text(`Dr. ${docName}`, 20, 20);
+        doc.setFontSize(10); doc.setTextColor(100); doc.text(docSpec.toUpperCase(), 20, 26);
+        doc.setDrawColor(200); doc.line(20, 30, 190, 30);
+        doc.setFontSize(12); doc.setTextColor(0); doc.text(`Fecha: ${date}`, 140, 40); doc.text(`Paciente: ${patientName}`, 20, 40);
 
-                let yPos = 55;
-                const addSection = (title, content) => {
-                    if(!content) return;
-                    doc.setFontSize(11); doc.setFont(undefined, 'bold'); doc.text(title, 20, yPos); yPos += 7;
-                    doc.setFont(undefined, 'normal');
-                    const splitText = doc.splitTextToSize(content, 170);
-                    doc.text(splitText, 20, yPos); 
-                    yPos += (splitText.length * 5) + 10;
-                };
-                
-                addSection("DIAGNÓSTICO:", diag);
-                addSection("PLAN / TRATAMIENTO:", plan);
-                addSection("INDICACIONES:", ind);
-                doc.setFontSize(8); doc.setTextColor(150); doc.text("Generado vía ClinicalV", 20, 280);
+        let yPos = 55;
+        const addSection = (title, content) => {
+            if(!content) return;
+            doc.setFontSize(11); doc.setFont(undefined, 'bold'); doc.text(title, 20, yPos); yPos += 7;
+            doc.setFont(undefined, 'normal');
+            const splitText = doc.splitTextToSize(content, 170);
+            doc.text(splitText, 20, yPos); 
+            yPos += (splitText.length * 5) + 10;
+        };
+        
+        addSection("DIAGNÓSTICO:", diag);
+        addSection("PLAN / TRATAMIENTO:", plan);
+        addSection("INDICACIONES:", ind);
+        doc.setFontSize(8); doc.setTextColor(150); doc.text("Generado vía ClinicalV", 20, 280);
 
-                const pdfBlob = doc.output('blob');
+        const pdfBlob = doc.output('blob');
 
-                // --- Subir a Supabase (CORRECCIÓN AQUÍ) ---
-                btn.innerHTML = '<i class="animate-spin">☁️</i> Subiendo...';
-                
-                // 1. Quitamos acentos y caracteres raros SOLO para el nombre del archivo
-                const safeName = patientName
-                    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // José -> Jose
-                    .replace(/[^a-zA-Z0-9]/g, "_"); // Símbolos -> _
-                
-                const fileName = `${Date.now()}_${safeName}.pdf`;
+        // --- Subir a Supabase ---
+        btn.innerHTML = '<i class="animate-spin">☁️</i> Subiendo...';
+        
+        const safeName = patientName
+            .normalize("NFD").replace(/[\u0300-\u036f]/g, "") 
+            .replace(/[^a-zA-Z0-9]/g, "_"); 
+        
+        const fileName = `${Date.now()}_${safeName}.pdf`;
 
-                const { data, error } = await supabaseClient.storage.from('informes').upload(fileName, pdfBlob, { contentType: 'application/pdf', upsert: false });
-                
-                if (error) {
-                    console.error("Error Supabase:", error);
-                    // Si el error es de permisos, avisamos. Si es otro, mostramos el técnico.
-                    if(error.message.includes("violates row-level security")) {
-                        throw new Error("Error de permisos. Ejecuta el SQL en Supabase.");
-                    } else {
-                        throw new Error("Error subiendo: " + error.message);
-                    }
-                }
+        const { data, error } = await supabaseClient.storage.from('informes').upload(fileName, pdfBlob, { contentType: 'application/pdf', upsert: false });
+        
+        if (error) throw new Error("Error subiendo PDF: " + error.message);
 
-                const { data: publicData } = supabaseClient.storage.from('informes').getPublicUrl(fileName);
-                const publicPDFLink = publicData.publicUrl;
+        const { data: publicData } = supabaseClient.storage.from('informes').getPublicUrl(fileName);
+        const publicPDFLink = publicData.publicUrl;
 
-// --- Enviar a n8n (MODO FORMULARIO PARA EVITAR ERROR 500/CORS) ---
-                btn.innerHTML = '<i class="animate-spin">🚀</i> Enviando...';
-                
-                if (N8N_SEND_WEBHOOK.includes('PON_AQUI')) throw new Error("Falta configurar el Webhook");
+        // --- Enviar a n8n (MODIFICADO PARA EMAIL) ---
+        btn.innerHTML = '<i class="animate-spin">🚀</i> Enviando...';
+        
+        const formData = new URLSearchParams();
+        // CAMBIO AQUÍ: Enviamos 'email' en vez de 'phone'
+        formData.append("email", email); 
+        formData.append("patient", patientName);
+        formData.append("doctor", docName);
+        formData.append("link", publicPDFLink);
 
-                // 1. Creamos un "Formulario Virtual"
-                const formData = new URLSearchParams();
-                formData.append("email", finalPhone);
-                formData.append("patient", patientName);
-                formData.append("doctor", docName);
-                formData.append("link", publicPDFLink);
+        await fetch(N8N_SEND_WEBHOOK, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: formData
+        });
 
-                // 2. Enviamos como 'application/x-www-form-urlencoded'
-                // Esto es una "Simple Request". El navegador NO hace preguntas de seguridad complicadas.
-                await fetch(N8N_SEND_WEBHOOK, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: formData
-                });
+        alert("✅ Informe enviado exitosamente por correo.");
 
-                alert("✅ Informe enviado exitosamente.");
-
-            } catch (err) {
-                console.error(err);
-                alert("❌ Error: " + err.message);
-            } finally {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            }
-        }
-
-
+    } catch (err) {
+        console.error(err);
+        alert("❌ Error: " + err.message);
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+}
         // --- GENERAR PDF LOCAL (Respaldo) ---
         function generatePDF() {
              const { jsPDF } = window.jspdf;
@@ -384,7 +368,7 @@ async function sendSmartReport() {
                     const data = await res.json();
                     const output = data.output || data; 
                     if (output.nombre_paciente) document.getElementById('nombre').value = output.nombre_paciente;
-                    if (output.telefono_paciente) document.getElementById('telefono').value = output.telefono_paciente;
+                    if (output.email_paciente) document.getElementById('email').value = output.email_paciente;
                     document.getElementById('txt-diag').value = `MOTIVO: ${output.motivo || ''}\n\nDX: ${output.diagnostico || ''}`;
                     document.getElementById('txt-plan').value = output.plan || '';
                     document.getElementById('txt-ind').value = output.recomendaciones_y_precauciones || '';
@@ -409,12 +393,13 @@ async function sendSmartReport() {
             navigator.clipboard.writeText(msg).then(() => alert("Copiado"));
         }
         function reset() {
-            if(confirm("¿Nueva consulta?")) {
-                document.getElementById('section-record').classList.remove('hidden');
-                document.getElementById('section-edit').classList.add('hidden');
-                ['nombre','telefono','txt-diag','txt-plan','txt-ind'].forEach(id => document.getElementById(id).value = '');
-            }
-        }
+    if(confirm("¿Nueva consulta?")) {
+        document.getElementById('section-record').classList.remove('hidden');
+        document.getElementById('section-edit').classList.add('hidden');
+        // CAMBIO AQUÍ: 'email' en vez de 'telefono'
+        ['nombre','email','txt-diag','txt-plan','txt-ind'].forEach(id => document.getElementById(id).value = '');
+    }
+}
         function resizeAllTextareas() { document.querySelectorAll('textarea').forEach(el => { el.style.height = 'auto'; el.style.height = el.scrollHeight + 'px'; }); }
     </script>
 </body>
